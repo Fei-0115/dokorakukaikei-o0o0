@@ -282,10 +282,10 @@ export default function App() {
 
   const [showGasGuide, setShowGasGuide] = useState<boolean>(false);
 
-  // カラーモード状態 ＆ 画像再現初期カラー（グリーン系）
+  // カラーモード状態（初期設定を「light」に変更）
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('pos_theme');
-    return (saved as ThemeMode) || 'custom';
+    return (saved as ThemeMode) || 'light';
   });
 
   const [customPrimary, setCustomPrimary] = useState<string>(() => {
@@ -491,7 +491,7 @@ export default function App() {
       setTaxRate(10);
       setUseSpreadsheet(true);
       setGasUrl(DEFAULT_GAS_URL);
-      setThemeMode('custom');
+      setThemeMode('light');
       setCustomPrimary('#27925c');
       setCustomSecondary('#5f8263');
       setCustomBg('#7ec994');
@@ -1037,7 +1037,7 @@ export default function App() {
                   textAlign: 'center'
                 }}
               >
-                +¥1,000
+                +¥1000
               </button>
               <button
                 onClick={() => addReceivedAmount(5000)}
@@ -1053,7 +1053,7 @@ export default function App() {
                   textAlign: 'center'
                 }}
               >
-                +¥5,000
+                +¥5000
               </button>
               <button
                 onClick={() => addReceivedAmount(10000)}
@@ -1069,7 +1069,7 @@ export default function App() {
                   textAlign: 'center'
                 }}
               >
-                +¥10,000
+                +¥10000
               </button>
             </div>
 
@@ -1209,9 +1209,9 @@ export default function App() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', marginBottom: '12px' }}>
               <button onClick={() => setReceivedAmount(totalAmount)} style={{ backgroundColor: '#e2e8f0', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 0', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>ぴったり</button>
               <button onClick={() => addReceivedAmount(500)} style={{ backgroundColor: '#e2e8f0', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 0', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>+500</button>
-              <button onClick={() => addReceivedAmount(1000)} style={{ backgroundColor: '#e2e8f0', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 0', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>+1千</button>
-              <button onClick={() => addReceivedAmount(5000)} style={{ backgroundColor: '#e2e8f0', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 0', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>+5千</button>
-              <button onClick={() => addReceivedAmount(10000)} style={{ backgroundColor: '#fef08a', border: '1px solid #fde047', borderRadius: '6px', padding: '6px 0', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>+1万</button>
+              <button onClick={() => addReceivedAmount(1000)} style={{ backgroundColor: '#e2e8f0', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 0', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>+1000</button>
+              <button onClick={() => addReceivedAmount(5000)} style={{ backgroundColor: '#e2e8f0', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 0', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>+5000</button>
+              <button onClick={() => addReceivedAmount(10000)} style={{ backgroundColor: '#fef08a', border: '1px solid #fde047', borderRadius: '6px', padding: '6px 0', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>+10000</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '8px' }}>
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
@@ -1491,7 +1491,7 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: カラーモードの編集（スライダー削除済み） */}
+            {/* TAB 2: カラーモードの編集 */}
             {activeTab === 'theme' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px', textAlign: 'left' }}>
                 <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937', margin: 0, textAlign: 'left' }}>テーマカラーの選択</h3>
@@ -1546,7 +1546,7 @@ export default function App() {
                   {themeMode === 'custom' && <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '18px' }}>✓</span>}
                 </button>
 
-                {/* カスタムカラーピッカー（シンプル＆スライダーなし） */}
+                {/* カスタムカラーピッカー */}
                 {themeMode === 'custom' && (
                   <div style={{ backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '14px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#1e293b' }}>オリジナル配色の自由作成</div>
