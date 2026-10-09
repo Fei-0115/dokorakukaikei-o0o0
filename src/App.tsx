@@ -187,7 +187,7 @@ export default function App() {
         boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
         display: 'flex',
         flexWrap: 'wrap',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         alignItems: 'center',
         width: '100%',
         boxSizing: 'border-box',
