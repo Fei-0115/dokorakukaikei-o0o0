@@ -26,6 +26,7 @@ type ThemeConfig = {
   border: string;
   headerBg: string;
   headerText: string;
+  headerTimeColor: string; // 時刻・日付用の明瞭なテキストカラー
   productBg: string;
   productBorder: string;
   productText: string;
@@ -54,6 +55,7 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
     border: '#e5e7eb',
     headerBg: '#ffffff',
     headerText: '#1f2937',
+    headerTimeColor: '#2563eb',
     productBg: '#eff6ff',
     productBorder: '#bfdbfe',
     productText: '#1f2937',
@@ -80,6 +82,7 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
     border: '#334155',
     headerBg: '#1e293b',
     headerText: '#f8fafc',
+    headerTimeColor: '#38bdf8',
     productBg: '#334155',
     productBorder: '#475569',
     productText: '#f8fafc',
@@ -106,6 +109,7 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
     border: '#fed7aa',
     headerBg: '#ff6b00',
     headerText: '#ffffff',
+    headerTimeColor: '#ffffff',
     productBg: '#ffedd5',
     productBorder: '#fdba74',
     productText: '#9a3412',
@@ -132,6 +136,7 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
     border: '#fbcfe8',
     headerBg: '#fce7f3',
     headerText: '#831843',
+    headerTimeColor: '#db2777',
     productBg: '#fdf2f8',
     productBorder: '#fbcfe8',
     productText: '#831843',
@@ -166,7 +171,7 @@ function getContrastingSubTextColor(hexColor: string): string {
   return isLightBg ? '#475569' : '#e2e8f0';
 }
 
-// カスタムテーマ生成関数
+// カスタムテーマ生成関数（ヘッダーの時刻視認性改善）
 function generateCustomTheme(primary: string, secondary: string, customBg: string, cardBg: string): ThemeConfig {
   const headerText = getContrastingTextColor(primary);
   const cartText = getContrastingTextColor(secondary);
@@ -184,6 +189,7 @@ function generateCustomTheme(primary: string, secondary: string, customBg: strin
     border: cardText === '#ffffff' ? 'rgba(255,255,255,0.2)' : '#cbd5e1',
     headerBg: primary,
     headerText: headerText,
+    headerTimeColor: headerText, // ヘッダー背景色に応じた適切なコントラストカラー
     productBg: `${primary}18`,
     productBorder: `${primary}50`,
     productText: cardText,
@@ -282,7 +288,7 @@ export default function App() {
 
   const [showGasGuide, setShowGasGuide] = useState<boolean>(false);
 
-  // カラーモード状態（初期設定を「light」に変更）
+  // カラーモード状態
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('pos_theme');
     return (saved as ThemeMode) || 'light';
@@ -741,9 +747,9 @@ export default function App() {
           {appName}
         </h1>
         
-        <div style={{ fontSize: '15px', fontWeight: 'bold', color: t.headerText, display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+        <div style={{ fontSize: '15px', fontWeight: 'bold', color: t.headerTimeColor, display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
           <span>{formattedDate}</span>
-          <span style={{ color: themeMode === 'vivid' ? '#ffffff' : t.productPrice, fontSize: '18px', fontFamily: 'monospace' }}>{formattedTime}</span>
+          <span style={{ fontSize: '18px', fontFamily: 'monospace' }}>{formattedTime}</span>
         </div>
       </div>
 
