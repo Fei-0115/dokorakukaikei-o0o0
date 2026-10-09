@@ -198,7 +198,7 @@ export default function App() {
       }}>
         {/* 【色変更】店舗タイトルの文字色 */}
         <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#1f2937' }}>
-          サイクルパークとやま
+          ドコラクかいけい
         </h1>
         
         {/* 右上の時計表示エリア */}
