@@ -221,11 +221,11 @@ function generateCustomTheme(primary: string, secondary: string, customBg: strin
   };
 }
 
-// 羊ロゴSVG
-const OctagonSheepLogo = ({ color = '#ffffff' }: { color?: string }) => (
+// 八角形×羊SVG
+const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false }: { color?: string; isEating?: boolean; isHappy?: boolean }) => (
   <svg
-    width="32"
-    height="32"
+    width="34"
+    height="34"
     viewBox="0 0 100 100"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -238,18 +238,10 @@ const OctagonSheepLogo = ({ color = '#ffffff' }: { color?: string }) => (
       fill="none"
       strokeLinejoin="round"
     />
-    <path
-      d="M38,91 C38,97 44,97 44,91 Z"
-      stroke={color}
-      strokeWidth="3.5"
-      fill={color}
-    />
-    <path
-      d="M56,91 C56,97 62,97 62,91 Z"
-      stroke={color}
-      strokeWidth="3.5"
-      fill={color}
-    />
+
+    <path d="M38,91 C38,97 44,97 44,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
+    <path d="M56,91 C56,97 62,97 62,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
+
     <path
       d="M38,40 C32,40 28,46 30,52 C26,56 28,64 34,66 C38,74 62,74 66,66 C72,64 74,56 70,52 C72,46 68,40 62,40 C58,34 42,34 38,40 Z"
       stroke={color}
@@ -258,28 +250,43 @@ const OctagonSheepLogo = ({ color = '#ffffff' }: { color?: string }) => (
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <path
-      d="M34,42 C20,32 10,46 18,58 C24,66 34,60 30,50 C28,44 22,46 22,50"
-      stroke={color}
-      strokeWidth="3.5"
-      fill="none"
-      strokeLinecap="round"
-    />
-    <path
-      d="M66,42 C80,32 90,46 82,58 C76,66 66,60 70,50 C72,44 78,46 78,50"
-      stroke={color}
-      strokeWidth="3.5"
-      fill="none"
-      strokeLinecap="round"
-    />
-    <circle cx="43" cy="51" r="2.5" fill={color} />
-    <circle cx="57" cy="51" r="2.5" fill={color} />
-    <path
-      d="M50,56 L50,60 M46,63 C48,65 52,65 54,63"
-      stroke={color}
-      strokeWidth="3"
-      strokeLinecap="round"
-    />
+
+    <path d="M34,42 C20,32 10,46 18,58 C24,66 34,60 30,50 C28,44 22,46 22,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
+    <path d="M66,42 C80,32 90,46 82,58 C76,66 66,60 70,50 C72,44 78,46 78,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
+
+    {isHappy ? (
+      <g>
+        <path d="M39,52 Q43,46 47,52" stroke={color} strokeWidth="3" strokeLinecap="round" fill="none" />
+        <path d="M53,52 Q57,46 61,52" stroke={color} strokeWidth="3" strokeLinecap="round" fill="none" />
+      </g>
+    ) : (
+      <g>
+        <circle cx="43" cy="51" r="2.5" fill={color} />
+        <circle cx="57" cy="51" r="2.5" fill={color} />
+      </g>
+    )}
+
+    {isHappy ? (
+      <path d="M50,56 L50,59 M44,61 C47,67 53,67 56,61" stroke={color} strokeWidth="3" strokeLinecap="round" fill="none" />
+    ) : (
+      <path d="M50,56 L50,60 M46,63 C48,65 52,65 54,63" stroke={color} strokeWidth="3" strokeLinecap="round" />
+    )}
+
+    {isEating && (
+      <g>
+        <path d="M52,62 Q62,64 68,58 M52,62 Q66,68 74,66 M52,62 Q60,72 66,74" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" fill="none" />
+        <path d="M68,58 Q72,54 70,60 Z" fill="#22c55e" />
+        <path d="M74,66 Q78,62 76,68 Z" fill="#22c55e" />
+        <path d="M66,74 Q70,72 68,78 Z" fill="#22c55e" />
+      </g>
+    )}
+
+    {isHappy && (
+      <g fill="#facc15">
+        <path d="M22,22 L24,27 L29,29 L24,31 L22,36 L20,31 L15,29 L20,27 Z" />
+        <path d="M78,22 L80,27 L85,29 L80,31 L78,36 L76,31 L71,29 L76,27 Z" />
+      </g>
+    )}
   </svg>
 );
 
@@ -406,6 +413,9 @@ export default function App() {
   const [contactMessage, setContactMessage] = useState('');
   const [isContactSubmitting, setIsContactSubmitting] = useState(false);
 
+  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+
   const [expandModalType, setExpandModalType] = useState<'products' | 'tickets' | null>(null);
 
   const [products, setProducts] = useState<Item[]>(() => {
@@ -432,8 +442,15 @@ export default function App() {
   const [memberNumber, setMemberNumber] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  
+  const [isDesktop, setIsDesktop] = useState<boolean>(window.innerWidth >= 768);
 
-  // Vite/CSSのルート中央寄せ・幅制限を画面全幅にリセット
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     document.body.style.margin = '0';
     document.body.style.padding = '0';
@@ -519,6 +536,7 @@ export default function App() {
   }, []);
 
   const formattedDate = currentTime.toLocaleDateString('ja-JP', {
+    year: isDesktop ? 'numeric' : undefined,
     month: 'numeric',
     day: 'numeric',
     weekday: 'short',
@@ -559,7 +577,9 @@ export default function App() {
         body: JSON.stringify(payload),
       });
 
-      alert(`お問い合わせを受け付けました。\nご送信ありがとうございました。`);
+      setSuccessMessage('お問い合わせの送信が完了いたしました！');
+      setShowSuccessModal(true);
+
       setContactName('');
       setContactEmail('');
       setContactSubject('');
@@ -778,7 +798,8 @@ export default function App() {
       alert('お預かり金額が不足しています');
       return;
     }
-    alert(`お会計完了！\n\nお釣り: ¥${changeAmount.toLocaleString()}`);
+    setSuccessMessage(`お会計が完了いたしました！\nお釣り: ¥${changeAmount.toLocaleString()}`);
+    setShowSuccessModal(true);
     clearCart();
   };
 
@@ -787,7 +808,8 @@ export default function App() {
       alert('お預かり金額が不足しています');
       return;
     }
-    alert(`お会計のお渡し確認完了！\n\nお釣り: ¥${changeAmount.toLocaleString()}\n\n※続けて「2. シートへ送信」を押して記録を完了してください。`);
+    setSuccessMessage(`お会計のお渡し確認完了いたしました！\nお釣り: ¥${changeAmount.toLocaleString()}\n\n※続けて「2. シートへ送信」を押してください。`);
+    setShowSuccessModal(true);
   };
 
   const handleSendToSpreadsheet = async () => {
@@ -833,7 +855,8 @@ export default function App() {
         body: JSON.stringify(payload),
       });
 
-      alert('スプレッドシートへの記録が完了しました！データをリセットします。');
+      setSuccessMessage('スプレッドシートへの記録が正常に完了いたしました！');
+      setShowSuccessModal(true);
       clearCart();
     } catch (error) {
       alert('スプレッドシートへの送信中にエラーが発生しました。');
@@ -898,18 +921,18 @@ export default function App() {
 
           <OctagonSheepLogo color={t.headerText} />
 
-          <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: t.headerText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold', color: t.headerText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {appName}
           </h1>
         </div>
         
-        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.headerTimeColor, display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: '14px', fontWeight: 'bold', color: t.headerTimeColor, display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
           <span>{formattedDate}</span>
-          <span style={{ fontSize: '15px', fontFamily: 'monospace' }}>{formattedTime}</span>
+          <span style={{ fontSize: '16px', fontFamily: 'monospace' }}>{formattedTime}</span>
         </div>
       </div>
 
-      {/* メインエリア（端から端まで100%拡張） */}
+      {/* メインエリア */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', width: '100%', flex: 1, boxSizing: 'border-box' }}>
         
         {/* 左側：商品・回数券選択 */}
@@ -925,7 +948,7 @@ export default function App() {
           minWidth: '280px'
         }}>
           <div style={{ flex: 1 }}>
-            {/* 会員番号（ONの時のみ表示） */}
+            {/* 会員番号 */}
             {useMemberNumber && (
               <div style={{
                 backgroundColor: t.bg,
@@ -962,7 +985,7 @@ export default function App() {
               </div>
             )}
 
-            {/* カスタマイズ可能な商品選択セクション見出し */}
+            {/* 商品選択 */}
             <h2 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: t.text, textAlign: 'left' }}>{productSectionTitle}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', marginBottom: '16px' }}>
               {products.map((product) => (
@@ -970,21 +993,32 @@ export default function App() {
                   key={product.id}
                   onClick={() => addToCart(product)}
                   style={{
-                    padding: '12px 14px',
+                    padding: '12px 10px',
                     backgroundColor: t.productBg,
                     border: `1px solid ${t.productBorder}`,
                     borderRadius: '8px',
                     textAlign: 'left',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden'
                   }}
                 >
-                  <div style={{ fontWeight: 'bold', fontSize: '15px', color: t.productText }}>{product.name}</div>
+                  <div style={{ 
+                    fontWeight: 'bold', 
+                    fontSize: '14px', 
+                    color: t.productText, 
+                    wordBreak: 'break-all', 
+                    whiteSpace: 'normal', 
+                    lineHeight: '1.3' 
+                  }}>
+                    {product.name}
+                  </div>
                   <div style={{ color: t.productPrice, fontWeight: 'bold', marginTop: '4px', fontSize: '14px' }}>¥{product.price.toLocaleString()}</div>
                 </button>
               ))}
             </div>
 
-            {/* 回数券（ONの時のみ表示） */}
+            {/* 回数券 */}
             {useTickets && (
               <>
                 <h2 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: t.text, borderTop: `1px solid ${t.border}`, paddingTop: '12px', textAlign: 'left' }}>{ticketSectionTitle}</h2>
@@ -994,15 +1028,26 @@ export default function App() {
                       key={ticket.id}
                       onClick={() => applyTicket(ticket)}
                       style={{
-                        padding: '12px 14px',
+                        padding: '12px 10px',
                         backgroundColor: t.ticketBg,
                         border: `1px solid ${t.ticketBorder}`,
                         borderRadius: '8px',
                         textAlign: 'left',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        boxSizing: 'border-box',
+                        overflow: 'hidden'
                       }}
                     >
-                      <div style={{ fontWeight: 'bold', fontSize: '15px', color: t.ticketText }}>{ticket.name}</div>
+                      <div style={{ 
+                        fontWeight: 'bold', 
+                        fontSize: '14px', 
+                        color: t.ticketText, 
+                        wordBreak: 'break-all', 
+                        whiteSpace: 'normal', 
+                        lineHeight: '1.3' 
+                      }}>
+                        {ticket.name}
+                      </div>
                       <div style={{ color: t.ticketAmount, fontWeight: 'bold', marginTop: '4px', fontSize: '14px' }}>-¥{ticket.amount.toLocaleString()}</div>
                     </button>
                   ))}
@@ -1064,7 +1109,7 @@ export default function App() {
                   {cart.map((c) => (
                     <div key={c.item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', marginBottom: '8px', backgroundColor: t.cartItemBg, padding: '8px 12px', borderRadius: '6px', textAlign: 'left' }}>
                       <div style={{ flex: 1, minWidth: 0, paddingRight: '6px', textAlign: 'left' }}>
-                        <div style={{ fontWeight: 'bold', color: t.cartText, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>{c.item.name}</div>
+                        <div style={{ fontWeight: 'bold', color: t.cartText, wordBreak: 'break-all', whiteSpace: 'normal', textAlign: 'left' }}>{c.item.name}</div>
                         <div style={{ fontSize: '13px', color: t.cartText, opacity: 0.8, textAlign: 'left' }}>¥{(c.item.price * c.quantity).toLocaleString()}</div>
                       </div>
                       
@@ -1096,7 +1141,7 @@ export default function App() {
                   {appliedTickets.map((tItem) => (
                     <div key={tItem.ticket.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', marginBottom: '8px', backgroundColor: t.ticketBg, padding: '8px 12px', borderRadius: '6px', textAlign: 'left', border: `1px solid ${t.ticketBorder}` }}>
                       <div style={{ flex: 1, minWidth: 0, paddingRight: '6px', textAlign: 'left' }}>
-                        <div style={{ fontWeight: 'bold', color: t.ticketText, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>【回数券】{tItem.ticket.name}</div>
+                        <div style={{ fontWeight: 'bold', color: t.ticketText, wordBreak: 'break-all', whiteSpace: 'normal', textAlign: 'left' }}>【回数券】{tItem.ticket.name}</div>
                         <div style={{ fontSize: '13px', color: t.ticketAmount, textAlign: 'left' }}>-¥{(tItem.ticket.amount * tItem.quantity).toLocaleString()}</div>
                       </div>
 
@@ -1337,6 +1382,101 @@ export default function App() {
         </div>
       </div>
 
+      {/* ローディング中画面 */}
+      {(isSubmitting || isContactSubmitting) && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.65)',
+          zIndex: 2000,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: '#ffffff',
+          gap: '12px'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '24px 32px',
+            borderRadius: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+          }}>
+            <OctagonSheepLogo color="#1f2937" isEating={true} />
+            <div style={{ color: '#1f2937', fontWeight: 'bold', fontSize: '16px', marginTop: '12px' }}>
+              データ送信中...
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 完了通知ポップアップ（喜ぶ笑顔羊＆キラキラ演出） */}
+      {showSuccessModal && (
+        <div 
+          onClick={() => setShowSuccessModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            zIndex: 2000,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '16px'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#ffffff',
+              padding: '24px 32px',
+              borderRadius: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+              maxWidth: '340px',
+              width: '100%',
+              boxSizing: 'border-box'
+            }}
+          >
+            <OctagonSheepLogo color="#16a34a" isHappy={true} />
+            <div style={{ color: '#16a34a', fontWeight: 'bold', fontSize: '18px', marginTop: '12px', marginBottom: '8px' }}>
+              完了いたしました！
+            </div>
+            <div style={{ color: '#374151', fontSize: '14px', lineHeight: '1.5', whiteSpace: 'pre-wrap', textAlign: 'center', marginBottom: '20px' }}>
+              {successMessage}
+            </div>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                backgroundColor: '#16a34a',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '15px',
+                cursor: 'pointer'
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 会員番号テンキー */}
       {showMemberKeypad && (
         <div onClick={() => setShowMemberKeypad(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px' }}>
@@ -1397,9 +1537,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ========================================== */}
-      {/* 項目一覧 全画面表示モーダル */}
-      {/* ========================================== */}
+      {/* モーダル */}
       {expandModalType && (
         <div 
           onClick={() => setExpandModalType(null)} 
@@ -1411,7 +1549,11 @@ export default function App() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: `1px solid ${t.border}`, paddingBottom: '10px', flexShrink: 0 }}>
               <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 'bold', color: t.drawerText }}>
-                {expandModalType === 'products' ? `📦 ${productSectionTitle}一覧` : `🎟️ ${ticketSectionTitle}一覧`}
+                {expandModalType === 'products' ? (
+                  <>📦 {productSectionTitle}一覧</>
+                ) : (
+                  <>🎟️ {ticketSectionTitle}一覧</>
+                )}
               </h3>
               <button onClick={() => setExpandModalType(null)} style={{ border: 'none', backgroundColor: 'transparent', fontSize: '22px', cursor: 'pointer', color: t.subText }}>✕</button>
             </div>
@@ -1420,9 +1562,9 @@ export default function App() {
               {expandModalType === 'products' ? (
                 products.map((p, index) => (
                   <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: `1px solid ${t.border}`, backgroundColor: t.bg, marginBottom: '6px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: t.text, flex: 1, textAlign: 'left' }}>{p.name} <span style={{ color: t.productPrice, fontWeight: 'bold' }}>(¥{p.price.toLocaleString()})</span></span>
+                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: t.text, flex: 1, textAlign: 'left', wordBreak: 'break-all' }}>{p.name} <span style={{ color: t.productPrice, fontWeight: 'bold' }}>(¥{p.price.toLocaleString()})</span></span>
                     
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                       <button onClick={() => handleMoveProduct(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
                       <button onClick={() => handleMoveProduct(index, 'down')} disabled={index === products.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === products.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
                       <button onClick={() => handleDeleteProduct(p.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
@@ -1432,9 +1574,9 @@ export default function App() {
               ) : (
                 tickets.map((tItem, index) => (
                   <div key={tItem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: `1px solid ${t.border}`, backgroundColor: t.bg, marginBottom: '6px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: t.ticketText, flex: 1, textAlign: 'left' }}>{tItem.name} <span style={{ color: t.ticketAmount, fontWeight: 'bold' }}>(-¥{tItem.amount.toLocaleString()})</span></span>
+                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: t.ticketText, flex: 1, textAlign: 'left', wordBreak: 'break-all' }}>{tItem.name} <span style={{ color: t.ticketAmount, fontWeight: 'bold' }}>(-¥{tItem.amount.toLocaleString()})</span></span>
                     
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                       <button onClick={() => handleMoveTicket(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
                       <button onClick={() => handleMoveTicket(index, 'down')} disabled={index === tickets.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === tickets.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
                       <button onClick={() => handleDeleteTicket(tItem.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
@@ -1451,9 +1593,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ========================================== */}
-      {/* 5. カラーテーマ連動 ドロワーメニュー */}
-      {/* ========================================== */}
+      {/* ドロワーメニュー */}
       {isMenuOpen && (
         <div 
           onClick={() => setIsMenuOpen(false)}
@@ -1487,7 +1627,7 @@ export default function App() {
               transition: 'all 0.3s ease'
             }}
           >
-            {/* 6つのタブ切替バー ＆ 閉じるボタン */}
+            {/* 6つのタブ切替バー */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${t.border}`, marginBottom: '16px', flexShrink: 0 }}>
               <div style={{ display: 'flex', flex: 1, gap: '2px', overflowX: 'auto', paddingBottom: '4px' }}>
                 <button
@@ -1498,7 +1638,7 @@ export default function App() {
                     backgroundColor: 'transparent',
                     borderBottom: activeTab === 'items' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     color: activeTab === 'items' ? t.productPrice : t.subText,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap'
@@ -1514,7 +1654,7 @@ export default function App() {
                     backgroundColor: 'transparent',
                     borderBottom: activeTab === 'theme' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     color: activeTab === 'theme' ? t.productPrice : t.subText,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap'
@@ -1530,7 +1670,7 @@ export default function App() {
                     backgroundColor: 'transparent',
                     borderBottom: activeTab === 'settings' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     color: activeTab === 'settings' ? t.productPrice : t.subText,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap'
@@ -1546,7 +1686,7 @@ export default function App() {
                     backgroundColor: 'transparent',
                     borderBottom: activeTab === 'guide' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     color: activeTab === 'guide' ? t.productPrice : t.subText,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap'
@@ -1562,7 +1702,7 @@ export default function App() {
                     backgroundColor: 'transparent',
                     borderBottom: activeTab === 'faq' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     color: activeTab === 'faq' ? t.productPrice : t.subText,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap'
@@ -1578,7 +1718,7 @@ export default function App() {
                     backgroundColor: 'transparent',
                     borderBottom: activeTab === 'contact' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     color: activeTab === 'contact' ? t.productPrice : t.subText,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap'
@@ -1637,9 +1777,9 @@ export default function App() {
                   <div style={{ maxHeight: '180px', overflowY: 'auto', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px', backgroundColor: t.bg }}>
                     {products.map((p, index) => (
                       <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: `1px solid ${t.border}`, backgroundColor: t.cardBg, marginBottom: '4px', borderRadius: '6px', textAlign: 'left' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: t.text, flex: 1, textAlign: 'left' }}>{p.name} <span style={{ color: t.productPrice, fontWeight: 'normal' }}>(¥{p.price.toLocaleString()})</span></span>
+                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: t.text, flex: 1, textAlign: 'left', wordBreak: 'break-all' }}>{p.name} <span style={{ color: t.productPrice, fontWeight: 'normal' }}>(¥{p.price.toLocaleString()})</span></span>
                         
-                        <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '3px', alignItems: 'center', flexShrink: 0 }}>
                           <button onClick={() => handleMoveProduct(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.bg, color: index === 0 ? t.subText : t.text, borderRadius: '4px', padding: '3px 8px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▲</button>
                           <button onClick={() => handleMoveProduct(index, 'down')} disabled={index === products.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.bg, color: index === products.length - 1 ? t.subText : t.text, borderRadius: '4px', padding: '3px 8px', cursor: index === products.length - 1 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▼</button>
                           <button onClick={() => handleDeleteProduct(p.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '11px', cursor: 'pointer', marginLeft: '2px', fontWeight: 'bold' }}>削除</button>
@@ -1689,9 +1829,9 @@ export default function App() {
                     <div style={{ maxHeight: '180px', overflowY: 'auto', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px', backgroundColor: t.bg }}>
                       {tickets.map((tItem, index) => (
                         <div key={tItem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: `1px solid ${t.border}`, backgroundColor: t.cardBg, marginBottom: '4px', borderRadius: '6px', textAlign: 'left' }}>
-                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: t.ticketText, flex: 1, textAlign: 'left' }}>{tItem.name} <span style={{ color: t.ticketAmount, fontWeight: 'normal' }}>(-¥{tItem.amount.toLocaleString()})</span></span>
+                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: t.ticketText, flex: 1, textAlign: 'left', wordBreak: 'break-all' }}>{tItem.name} <span style={{ color: t.ticketAmount, fontWeight: 'normal' }}>(-¥{tItem.amount.toLocaleString()})</span></span>
                           
-                          <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', gap: '3px', alignItems: 'center', flexShrink: 0 }}>
                             <button onClick={() => handleMoveTicket(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.bg, color: index === 0 ? t.subText : t.text, borderRadius: '4px', padding: '3px 8px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▲</button>
                             <button onClick={() => handleMoveTicket(index, 'down')} disabled={index === tickets.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.bg, color: index === tickets.length - 1 ? t.subText : t.text, borderRadius: '4px', padding: '3px 8px', cursor: index === tickets.length - 1 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▼</button>
                             <button onClick={() => handleDeleteTicket(tItem.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '11px', cursor: 'pointer', marginLeft: '2px', fontWeight: 'bold' }}>削除</button>
@@ -1830,7 +1970,7 @@ export default function App() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '20px', textAlign: 'left' }}>
                 <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div>
-                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>アプリ名の変更</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>タイトル名の変更</h3>
                     <input
                       type="text"
                       value={appName}
