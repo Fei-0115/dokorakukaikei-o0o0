@@ -26,7 +26,7 @@ type ThemeConfig = {
   border: string;
   headerBg: string;
   headerText: string;
-  headerTimeColor: string; // 時刻・日付用の明瞭なテキストカラー
+  headerTimeColor: string;
   productBg: string;
   productBorder: string;
   productText: string;
@@ -43,6 +43,8 @@ type ThemeConfig = {
   accentChange: string;
   quickBtnBg: string;
   quickBtnText: string;
+  drawerBg: string;
+  drawerText: string;
 };
 
 const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
@@ -72,6 +74,8 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
     accentChange: '#4ade80',
     quickBtnBg: '#374151',
     quickBtnText: '#e5e7eb',
+    drawerBg: '#ffffff',
+    drawerText: '#1f2937',
   },
   dark: {
     name: '🌙 ダーク',
@@ -99,6 +103,8 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
     accentChange: '#4ade80',
     quickBtnBg: '#1e293b',
     quickBtnText: '#f8fafc',
+    drawerBg: '#1e293b',
+    drawerText: '#f8fafc',
   },
   vivid: {
     name: '⚡ ビタミン',
@@ -126,6 +132,8 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
     accentChange: '#047857',
     quickBtnBg: '#f97316',
     quickBtnText: '#ffffff',
+    drawerBg: '#ffffff',
+    drawerText: '#7c2d12',
   },
   pastel: {
     name: '🌸 パステル',
@@ -153,6 +161,8 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
     accentChange: '#15803d',
     quickBtnBg: '#f472b6',
     quickBtnText: '#ffffff',
+    drawerBg: '#ffffff',
+    drawerText: '#831843',
   },
 };
 
@@ -171,7 +181,7 @@ function getContrastingSubTextColor(hexColor: string): string {
   return isLightBg ? '#475569' : '#e2e8f0';
 }
 
-// カスタムテーマ生成関数（ヘッダーの時刻視認性改善）
+// カスタムテーマ生成関数
 function generateCustomTheme(primary: string, secondary: string, customBg: string, cardBg: string): ThemeConfig {
   const headerText = getContrastingTextColor(primary);
   const cartText = getContrastingTextColor(secondary);
@@ -189,7 +199,7 @@ function generateCustomTheme(primary: string, secondary: string, customBg: strin
     border: cardText === '#ffffff' ? 'rgba(255,255,255,0.2)' : '#cbd5e1',
     headerBg: primary,
     headerText: headerText,
-    headerTimeColor: headerText, // ヘッダー背景色に応じた適切なコントラストカラー
+    headerTimeColor: headerText,
     productBg: `${primary}18`,
     productBorder: `${primary}50`,
     productText: cardText,
@@ -206,13 +216,18 @@ function generateCustomTheme(primary: string, secondary: string, customBg: strin
     accentChange: isCartLight ? '#047857' : '#4ade80',
     quickBtnBg: primary,
     quickBtnText: getContrastingTextColor(primary),
+    drawerBg: cardBg,
+    drawerText: cardText,
   };
 }
 
 // ==========================================
-// 2. Google Apps Script（GAS）初期URL
+// 2. Google Apps Script（GAS）URL ＆ サンプルコード
 // ==========================================
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwyLOy2SO5X9bvR8SBc_uPy1ICbw6D3u_ABkQYRHAEJgNMK3LeNl7EAsvassfClx26CQA/exec';
+
+// ✉️ お問い合わせ受信用スプレッドシートのGAS URL
+const CONTACT_GAS_URL = 'https://script.google.com/macros/s/AKfycby-K4JPPfPLIFzO0wJmv53JV-7G6uSKUaWQEQlVFpNem7ZuucK8Q88464cOc8QyGPMwaw/exec';
 
 const SAMPLE_GAS_CODE = `function doPost(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -267,6 +282,17 @@ export default function App() {
     return localStorage.getItem('pos_ticket_section_title') || '回数券';
   });
 
+  // 会員番号・回数券のON/OFF設定
+  const [useMemberNumber, setUseMemberNumber] = useState<boolean>(() => {
+    const saved = localStorage.getItem('pos_use_member_number');
+    return saved ? JSON.parse(saved) : true;
+  });
+
+  const [useTickets, setUseTickets] = useState<boolean>(() => {
+    const saved = localStorage.getItem('pos_use_tickets');
+    return saved ? JSON.parse(saved) : true;
+  });
+
   const [useTax, setUseTax] = useState<boolean>(() => {
     const saved = localStorage.getItem('pos_use_tax');
     return saved ? JSON.parse(saved) : false;
@@ -316,7 +342,14 @@ export default function App() {
 
   // サイドドロワーメニュー
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'items' | 'theme' | 'settings'>('items');
+  const [activeTab, setActiveTab] = useState<'items' | 'theme' | 'settings' | 'guide' | 'faq' | 'contact'>('items');
+
+  // お問い合わせフォーム入力用状態 ＆ 送信フラグ
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactSubject, setContactSubject] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [isContactSubmitting, setIsContactSubmitting] = useState(false);
 
   // リスト全画面表示モーダル
   const [expandModalType, setExpandModalType] = useState<'products' | 'tickets' | null>(null);
@@ -362,6 +395,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('pos_ticket_section_title', ticketSectionTitle);
   }, [ticketSectionTitle]);
+
+  useEffect(() => {
+    localStorage.setItem('pos_use_member_number', JSON.stringify(useMemberNumber));
+  }, [useMemberNumber]);
+
+  useEffect(() => {
+    localStorage.setItem('pos_use_tickets', JSON.stringify(useTickets));
+  }, [useTickets]);
 
   useEffect(() => {
     localStorage.setItem('pos_use_tax', JSON.stringify(useTax));
@@ -424,6 +465,49 @@ export default function App() {
     minute: '2-digit',
     second: '2-digit',
   });
+
+  // --- お問い合わせ送信処理 ---
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactName || !contactMessage) {
+      alert('お名前とお問い合わせ内容を入力してください。');
+      return;
+    }
+
+    if (!CONTACT_GAS_URL || CONTACT_GAS_URL.trim() === '') {
+      alert('お問い合わせ受信用スプレッドシートのURLが未設定です。');
+      return;
+    }
+
+    setIsContactSubmitting(true);
+
+    const payload = {
+      '日時': `${formattedDate} ${formattedTime}`,
+      'お名前': contactName,
+      'メールアドレス': contactEmail || 'なし',
+      '件名': contactSubject || 'なし',
+      'お問い合わせ内容': contactMessage,
+    };
+
+    try {
+      await fetch(CONTACT_GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload),
+      });
+
+      alert(`お問い合わせを受け付けました。\nご送信ありがとうございました。`);
+      setContactName('');
+      setContactEmail('');
+      setContactSubject('');
+      setContactMessage('');
+    } catch (error) {
+      alert('お問い合わせの送信中にエラーが発生しました。設定をご確認ください。');
+    } finally {
+      setIsContactSubmitting(false);
+    }
+  };
 
   // --- 商品・回数券処理 ---
   const handleAddProduct = () => {
@@ -493,6 +577,8 @@ export default function App() {
       setAppName('簡単会計');
       setProductSectionTitle('商品選択');
       setTicketSectionTitle('回数券');
+      setUseMemberNumber(true);
+      setUseTickets(true);
       setUseTax(false);
       setTaxRate(10);
       setUseSpreadsheet(true);
@@ -508,6 +594,8 @@ export default function App() {
       localStorage.removeItem('pos_app_name');
       localStorage.removeItem('pos_prod_section_title');
       localStorage.removeItem('pos_ticket_section_title');
+      localStorage.removeItem('pos_use_member_number');
+      localStorage.removeItem('pos_use_tickets');
       localStorage.removeItem('pos_use_tax');
       localStorage.removeItem('pos_tax_rate');
       localStorage.removeItem('pos_use_spreadsheet');
@@ -661,7 +749,7 @@ export default function App() {
 
     const payload: Record<string, any> = {
       '日時': `${formattedDate} ${formattedTime}`,
-      '会員番号': memberNumber || 'なし',
+      '会員番号': useMemberNumber ? (memberNumber || 'なし') : '非使用',
       '小計': subtotal,
       [`消費税(${taxRate}%)`]: taxAmount,
       'お支払い合計': totalAmount,
@@ -674,10 +762,12 @@ export default function App() {
       payload[product.name] = cartItem ? cartItem.quantity : 0;
     });
 
-    tickets.forEach((ticket) => {
-      const ticketItem = appliedTickets.find((t) => t.ticket.id === ticket.id);
-      payload[ticket.name] = ticketItem ? ticketItem.quantity : 0;
-    });
+    if (useTickets) {
+      tickets.forEach((ticket) => {
+        const ticketItem = appliedTickets.find((t) => t.ticket.id === ticket.id);
+        payload[ticket.name] = ticketItem ? ticketItem.quantity : 0;
+      });
+    }
 
     try {
       await fetch(gasUrl, {
@@ -710,12 +800,15 @@ export default function App() {
       transition: 'background-color 0.3s ease',
     }}>
       
-      {/* ヘッダー */}
+      {/* 1. ヘッダー（スクロール時最上部固定） */}
       <div style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
         backgroundColor: t.headerBg,
         padding: '10px 20px',
         borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.06)',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
@@ -769,40 +862,42 @@ export default function App() {
           minWidth: '280px'
         }}>
           <div style={{ flex: 1 }}>
-            {/* 会員番号 */}
-            <div style={{
-              backgroundColor: t.bg,
-              border: `1px solid ${t.border}`,
-              padding: '10px 12px',
-              borderRadius: '8px',
-              marginBottom: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <label style={{ fontSize: '15px', fontWeight: 'bold', color: t.text, whiteSpace: 'nowrap' }}>会員番号:</label>
-              <input
-                type="text"
-                readOnly
-                value={memberNumber}
-                onClick={() => setShowMemberKeypad(true)}
-                onFocus={() => setShowMemberKeypad(true)}
-                placeholder="タップして番号入力"
-                style={{
-                  flex: 1,
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  backgroundColor: t.cardBg,
-                  border: `1px solid ${t.border}`,
-                  color: t.text,
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  cursor: 'pointer'
-                }}
-              />
-            </div>
+            {/* 会員番号（ONの時のみ表示） */}
+            {useMemberNumber && (
+              <div style={{
+                backgroundColor: t.bg,
+                border: `1px solid ${t.border}`,
+                padding: '10px 12px',
+                borderRadius: '8px',
+                marginBottom: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <label style={{ fontSize: '15px', fontWeight: 'bold', color: t.text, whiteSpace: 'nowrap' }}>会員番号:</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={memberNumber}
+                  onClick={() => setShowMemberKeypad(true)}
+                  onFocus={() => setShowMemberKeypad(true)}
+                  placeholder="タップして番号入力"
+                  style={{
+                    flex: 1,
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    padding: '6px 10px',
+                    borderRadius: '6px',
+                    backgroundColor: t.cardBg,
+                    border: `1px solid ${t.border}`,
+                    color: t.text,
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer'
+                  }}
+                />
+              </div>
+            )}
 
             {/* カスタマイズ可能な商品選択セクション見出し */}
             <h2 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: t.text, textAlign: 'left' }}>{productSectionTitle}</h2>
@@ -826,27 +921,31 @@ export default function App() {
               ))}
             </div>
 
-            {/* カスタマイズ可能な回数券セクション見出し */}
-            <h2 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: t.text, borderTop: `1px solid ${t.border}`, paddingTop: '12px', textAlign: 'left' }}>{ticketSectionTitle}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', marginBottom: '12px' }}>
-              {tickets.map((ticket) => (
-                <button
-                  key={ticket.id}
-                  onClick={() => applyTicket(ticket)}
-                  style={{
-                    padding: '10px 12px',
-                    backgroundColor: t.ticketBg,
-                    border: `1px solid ${t.ticketBorder}`,
-                    borderRadius: '8px',
-                    textAlign: 'left',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{ fontWeight: 'bold', fontSize: '15px', color: t.ticketText }}>{ticket.name}</div>
-                  <div style={{ color: t.ticketAmount, fontWeight: 'bold', marginTop: '2px', fontSize: '14px' }}>-¥{ticket.amount.toLocaleString()}</div>
-                </button>
-              ))}
-            </div>
+            {/* 回数券（ONの時のみ表示） */}
+            {useTickets && (
+              <>
+                <h2 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: t.text, borderTop: `1px solid ${t.border}`, paddingTop: '12px', textAlign: 'left' }}>{ticketSectionTitle}</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+                  {tickets.map((ticket) => (
+                    <button
+                      key={ticket.id}
+                      onClick={() => applyTicket(ticket)}
+                      style={{
+                        padding: '10px 12px',
+                        backgroundColor: t.ticketBg,
+                        border: `1px solid ${t.ticketBorder}`,
+                        borderRadius: '8px',
+                        textAlign: 'left',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', fontSize: '15px', color: t.ticketText }}>{ticket.name}</div>
+                      <div style={{ color: t.ticketAmount, fontWeight: 'bold', marginTop: '2px', fontSize: '14px' }}>-¥{ticket.amount.toLocaleString()}</div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {(cart.length > 0 || appliedTickets.length > 0 || memberNumber !== '') && (
@@ -888,7 +987,7 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: `1px solid ${themeMode === 'pastel' || themeMode === 'vivid' ? t.border : 'rgba(255,255,255,0.15)'}`, paddingBottom: '6px', flexShrink: 0 }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: t.cartText, margin: 0 }}>お会計内容</h2>
-              {memberNumber && (
+              {useMemberNumber && memberNumber && (
                 <span style={{ fontSize: '14px', color: t.cartText, fontWeight: 'bold' }}>会員: {memberNumber}</span>
               )}
             </div>
@@ -1079,9 +1178,9 @@ export default function App() {
               </button>
             </div>
 
-            {/* お預かり（現金）入力欄 */}
+            {/* お預かり入力欄（「お預かり(現金)」から修正） */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <span style={{ fontSize: '18px', color: t.cartText }}>お預かり（現金）:</span>
+              <span style={{ fontSize: '18px', color: t.cartText }}>お預かり:</span>
               <input
                 type="text"
                 readOnly
@@ -1245,36 +1344,36 @@ export default function App() {
         >
           <div 
             onClick={(e) => e.stopPropagation()} 
-            style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '480px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)', boxSizing: 'border-box' }}
+            style={{ backgroundColor: t.drawerBg, color: t.drawerText, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '480px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)', boxSizing: 'border-box', border: `1px solid ${t.border}` }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px', flexShrink: 0 }}>
-              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 'bold', color: '#1f2937' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: `1px solid ${t.border}`, paddingBottom: '10px', flexShrink: 0 }}>
+              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 'bold', color: t.drawerText }}>
                 {expandModalType === 'products' ? `📦 ${productSectionTitle}一覧` : `🎟️ ${ticketSectionTitle}一覧`}
               </h3>
-              <button onClick={() => setExpandModalType(null)} style={{ border: 'none', backgroundColor: 'transparent', fontSize: '22px', cursor: 'pointer', color: '#6b7280' }}>✕</button>
+              <button onClick={() => setExpandModalType(null)} style={{ border: 'none', backgroundColor: 'transparent', fontSize: '22px', cursor: 'pointer', color: t.subText }}>✕</button>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
               {expandModalType === 'products' ? (
                 products.map((p, index) => (
-                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc', marginBottom: '6px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#1e293b', flex: 1, textAlign: 'left' }}>{p.name} <span style={{ color: '#2563eb', fontWeight: 'bold' }}>(¥{p.price.toLocaleString()})</span></span>
+                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: `1px solid ${t.border}`, backgroundColor: t.bg, marginBottom: '6px', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: t.text, flex: 1, textAlign: 'left' }}>{p.name} <span style={{ color: t.productPrice, fontWeight: 'bold' }}>(¥{p.price.toLocaleString()})</span></span>
                     
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <button onClick={() => handleMoveProduct(index, 'up')} disabled={index === 0} style={{ border: '1px solid #cbd5e1', backgroundColor: index === 0 ? '#f1f5f9' : '#ffffff', color: index === 0 ? '#cbd5e1' : '#334155', borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
-                      <button onClick={() => handleMoveProduct(index, 'down')} disabled={index === products.length - 1} style={{ border: '1px solid #cbd5e1', backgroundColor: index === products.length - 1 ? '#f1f5f9' : '#ffffff', color: index === products.length - 1 ? '#cbd5e1' : '#334155', borderRadius: '4px', padding: '6px 12px', cursor: index === products.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
+                      <button onClick={() => handleMoveProduct(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
+                      <button onClick={() => handleMoveProduct(index, 'down')} disabled={index === products.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === products.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
                       <button onClick={() => handleDeleteProduct(p.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
                     </div>
                   </div>
                 ))
               ) : (
                 tickets.map((tItem, index) => (
-                  <div key={tItem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc', marginBottom: '6px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#166534', flex: 1, textAlign: 'left' }}>{tItem.name} <span style={{ color: '#15803d', fontWeight: 'bold' }}>(-¥{tItem.amount.toLocaleString()})</span></span>
+                  <div key={tItem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: `1px solid ${t.border}`, backgroundColor: t.bg, marginBottom: '6px', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: t.ticketText, flex: 1, textAlign: 'left' }}>{tItem.name} <span style={{ color: t.ticketAmount, fontWeight: 'bold' }}>(-¥{tItem.amount.toLocaleString()})</span></span>
                     
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <button onClick={() => handleMoveTicket(index, 'up')} disabled={index === 0} style={{ border: '1px solid #cbd5e1', backgroundColor: index === 0 ? '#f1f5f9' : '#ffffff', color: index === 0 ? '#cbd5e1' : '#334155', borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
-                      <button onClick={() => handleMoveTicket(index, 'down')} disabled={index === tickets.length - 1} style={{ border: '1px solid #cbd5e1', backgroundColor: index === tickets.length - 1 ? '#f1f5f9' : '#ffffff', color: index === tickets.length - 1 ? '#cbd5e1' : '#334155', borderRadius: '4px', padding: '6px 12px', cursor: index === tickets.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
+                      <button onClick={() => handleMoveTicket(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
+                      <button onClick={() => handleMoveTicket(index, 'down')} disabled={index === tickets.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === tickets.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
                       <button onClick={() => handleDeleteTicket(tItem.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
                     </div>
                   </div>
@@ -1282,7 +1381,7 @@ export default function App() {
               )}
             </div>
 
-            <button onClick={() => setExpandModalType(null)} style={{ marginTop: '16px', width: '100%', padding: '12px', backgroundColor: '#1f2937', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', flexShrink: 0 }}>
+            <button onClick={() => setExpandModalType(null)} style={{ marginTop: '16px', width: '100%', padding: '12px', backgroundColor: t.headerBg, color: t.headerText, border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', flexShrink: 0 }}>
               閉じる
             </button>
           </div>
@@ -1290,7 +1389,7 @@ export default function App() {
       )}
 
       {/* ========================================== */}
-      {/* 左端固定サイドドロワー */}
+      {/* 5. カラーテーマ連動 ドロワーメニュー */}
       {/* ========================================== */}
       {isMenuOpen && (
         <div 
@@ -1310,9 +1409,10 @@ export default function App() {
           <div 
             onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: t.drawerBg,
+              color: t.drawerText,
               width: '92%',
-              maxWidth: '420px',
+              maxWidth: '440px',
               height: '100%',
               boxSizing: 'border-box',
               padding: '20px 16px',
@@ -1320,23 +1420,25 @@ export default function App() {
               display: 'flex',
               flexDirection: 'column',
               overflowY: 'auto',
-              textAlign: 'left'
+              textAlign: 'left',
+              transition: 'all 0.3s ease'
             }}
           >
-            {/* 3つのタブ切り替えバー ＆ 閉じるボタン */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #e5e7eb', marginBottom: '16px', flexShrink: 0 }}>
-              <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+            {/* 6つのタブ切替バー ＆ 閉じるボタン */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${t.border}`, marginBottom: '16px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', flex: 1, gap: '2px', overflowX: 'auto', paddingBottom: '4px' }}>
                 <button
                   onClick={() => setActiveTab('items')}
                   style={{
-                    padding: '8px 4px',
+                    padding: '8px 6px',
                     border: 'none',
                     backgroundColor: 'transparent',
-                    borderBottom: activeTab === 'items' ? '3px solid #2563eb' : 'none',
+                    borderBottom: activeTab === 'items' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
-                    fontSize: '13px',
-                    color: activeTab === 'items' ? '#2563eb' : '#6b7280',
-                    cursor: 'pointer'
+                    fontSize: '12px',
+                    color: activeTab === 'items' ? t.productPrice : t.subText,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   ⚙️ 会計項目
@@ -1344,14 +1446,15 @@ export default function App() {
                 <button
                   onClick={() => setActiveTab('theme')}
                   style={{
-                    padding: '8px 4px',
+                    padding: '8px 6px',
                     border: 'none',
                     backgroundColor: 'transparent',
-                    borderBottom: activeTab === 'theme' ? '3px solid #2563eb' : 'none',
+                    borderBottom: activeTab === 'theme' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
-                    fontSize: '13px',
-                    color: activeTab === 'theme' ? '#2563eb' : '#6b7280',
-                    cursor: 'pointer'
+                    fontSize: '12px',
+                    color: activeTab === 'theme' ? t.productPrice : t.subText,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   🎨 カラー
@@ -1359,22 +1462,71 @@ export default function App() {
                 <button
                   onClick={() => setActiveTab('settings')}
                   style={{
-                    padding: '8px 4px',
+                    padding: '8px 6px',
                     border: 'none',
                     backgroundColor: 'transparent',
-                    borderBottom: activeTab === 'settings' ? '3px solid #2563eb' : 'none',
+                    borderBottom: activeTab === 'settings' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
-                    fontSize: '13px',
-                    color: activeTab === 'settings' ? '#2563eb' : '#6b7280',
-                    cursor: 'pointer'
+                    fontSize: '12px',
+                    color: activeTab === 'settings' ? t.productPrice : t.subText,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   ✏️ アプリ設定
                 </button>
+                <button
+                  onClick={() => setActiveTab('guide')}
+                  style={{
+                    padding: '8px 6px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    borderBottom: activeTab === 'guide' ? `3px solid ${t.productPrice}` : 'none',
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    color: activeTab === 'guide' ? t.productPrice : t.subText,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  📖 使い方
+                </button>
+                <button
+                  onClick={() => setActiveTab('faq')}
+                  style={{
+                    padding: '8px 6px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    borderBottom: activeTab === 'faq' ? `3px solid ${t.productPrice}` : 'none',
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    color: activeTab === 'faq' ? t.productPrice : t.subText,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  ❓ FAQ・規約
+                </button>
+                <button
+                  onClick={() => setActiveTab('contact')}
+                  style={{
+                    padding: '8px 6px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    borderBottom: activeTab === 'contact' ? `3px solid ${t.productPrice}` : 'none',
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    color: activeTab === 'contact' ? t.productPrice : t.subText,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  ✉️ お問い合わせ
+                </button>
               </div>
               <button
                 onClick={() => setIsMenuOpen(false)}
-                style={{ backgroundColor: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', color: '#6b7280', padding: '0 4px' }}
+                style={{ backgroundColor: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', color: t.subText, padding: '0 4px', flexShrink: 0 }}
               >
                 ✕
               </button>
@@ -1383,14 +1535,12 @@ export default function App() {
             {/* TAB 1: 会計項目の編集 */}
             {activeTab === 'items' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px', textAlign: 'left' }}>
-                
-                {/* 商品リストの編集 */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937', margin: 0, textAlign: 'left' }}>{productSectionTitle}リストの編集</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left' }}>{productSectionTitle}リストの編集</h3>
                     <button
                       onClick={() => setExpandModalType('products')}
-                      style={{ backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '3px 8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                      style={{ backgroundColor: t.productBg, color: t.productPrice, border: `1px solid ${t.productBorder}`, borderRadius: '4px', padding: '3px 8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                     >
                       全表示（大きく編集）
                     </button>
@@ -1402,7 +1552,7 @@ export default function App() {
                       placeholder="商品名 (例: 大人 E)"
                       value={newProdName}
                       onChange={(e) => setNewProdName(e.target.value)}
-                      style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                      style={{ padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '14px', backgroundColor: t.bg, color: t.text }}
                     />
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <input
@@ -1410,25 +1560,25 @@ export default function App() {
                         placeholder="価格 (円)"
                         value={newProdPrice}
                         onChange={(e) => setNewProdPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                        style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                        style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '14px', backgroundColor: t.bg, color: t.text }}
                       />
                       <button
                         onClick={handleAddProduct}
-                        style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                        style={{ backgroundColor: t.productPrice, color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
                       >
                         追加
                       </button>
                     </div>
                   </div>
 
-                  <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '6px', padding: '6px', backgroundColor: '#f8fafc' }}>
+                  <div style={{ maxHeight: '180px', overflowY: 'auto', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px', backgroundColor: t.bg }}>
                     {products.map((p, index) => (
-                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#ffffff', marginBottom: '4px', borderRadius: '6px', textAlign: 'left' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b', flex: 1, textAlign: 'left' }}>{p.name} <span style={{ color: '#2563eb', fontWeight: 'normal' }}>(¥{p.price.toLocaleString()})</span></span>
+                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: `1px solid ${t.border}`, backgroundColor: t.cardBg, marginBottom: '4px', borderRadius: '6px', textAlign: 'left' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: t.text, flex: 1, textAlign: 'left' }}>{p.name} <span style={{ color: t.productPrice, fontWeight: 'normal' }}>(¥{p.price.toLocaleString()})</span></span>
                         
                         <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
-                          <button onClick={() => handleMoveProduct(index, 'up')} disabled={index === 0} style={{ border: '1px solid #cbd5e1', backgroundColor: index === 0 ? '#f1f5f9' : '#ffffff', color: index === 0 ? '#cbd5e1' : '#334155', borderRadius: '4px', padding: '3px 8px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▲</button>
-                          <button onClick={() => handleMoveProduct(index, 'down')} disabled={index === products.length - 1} style={{ border: '1px solid #cbd5e1', backgroundColor: index === products.length - 1 ? '#f1f5f9' : '#ffffff', color: index === products.length - 1 ? '#cbd5e1' : '#334155', borderRadius: '4px', padding: '3px 8px', cursor: index === products.length - 1 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▼</button>
+                          <button onClick={() => handleMoveProduct(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.bg, color: index === 0 ? t.subText : t.text, borderRadius: '4px', padding: '3px 8px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▲</button>
+                          <button onClick={() => handleMoveProduct(index, 'down')} disabled={index === products.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.bg, color: index === products.length - 1 ? t.subText : t.text, borderRadius: '4px', padding: '3px 8px', cursor: index === products.length - 1 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▼</button>
                           <button onClick={() => handleDeleteProduct(p.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '11px', cursor: 'pointer', marginLeft: '2px', fontWeight: 'bold' }}>削除</button>
                         </div>
                       </div>
@@ -1436,61 +1586,62 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 回数券リストの編集 */}
-                <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937', margin: 0, textAlign: 'left' }}>{ticketSectionTitle}リストの編集</h3>
-                    <button
-                      onClick={() => setExpandModalType('tickets')}
-                      style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '3px 8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
-                    >
-                      全表示（大きく編集）
-                    </button>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
-                    <input
-                      type="text"
-                      placeholder="回数券名 (例: ★特別券)"
-                      value={newTicketName}
-                      onChange={(e) => setNewTicketName(e.target.value)}
-                      style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
-                    />
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <input
-                        type="number"
-                        placeholder="割引額 (円)"
-                        value={newTicketAmount}
-                        onChange={(e) => setNewTicketAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                        style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
-                      />
+                {useTickets && (
+                  <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left' }}>{ticketSectionTitle}リストの編集</h3>
                       <button
-                        onClick={handleAddTicket}
-                        style={{ backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                        onClick={() => setExpandModalType('tickets')}
+                        style={{ backgroundColor: t.ticketBg, color: t.ticketText, border: `1px solid ${t.ticketBorder}`, borderRadius: '4px', padding: '3px 8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                       >
-                        追加
+                        全表示（大きく編集）
                       </button>
                     </div>
-                  </div>
 
-                  <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '6px', padding: '6px', backgroundColor: '#f8fafc' }}>
-                    {tickets.map((tItem, index) => (
-                      <div key={tItem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#ffffff', marginBottom: '4px', borderRadius: '6px', textAlign: 'left' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#166534', flex: 1, textAlign: 'left' }}>{tItem.name} <span style={{ color: '#15803d', fontWeight: 'normal' }}>(-¥{tItem.amount.toLocaleString()})</span></span>
-                        
-                        <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
-                          <button onClick={() => handleMoveTicket(index, 'up')} disabled={index === 0} style={{ border: '1px solid #cbd5e1', backgroundColor: index === 0 ? '#f1f5f9' : '#ffffff', color: index === 0 ? '#cbd5e1' : '#334155', borderRadius: '4px', padding: '3px 8px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▲</button>
-                          <button onClick={() => handleMoveTicket(index, 'down')} disabled={index === tickets.length - 1} style={{ border: '1px solid #cbd5e1', backgroundColor: index === tickets.length - 1 ? '#f1f5f9' : '#ffffff', color: index === tickets.length - 1 ? '#cbd5e1' : '#334155', borderRadius: '4px', padding: '3px 8px', cursor: index === tickets.length - 1 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▼</button>
-                          <button onClick={() => handleDeleteTicket(tItem.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '11px', cursor: 'pointer', marginLeft: '2px', fontWeight: 'bold' }}>削除</button>
-                        </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+                      <input
+                        type="text"
+                        placeholder="回数券名 (例: ★特別券)"
+                        value={newTicketName}
+                        onChange={(e) => setNewTicketName(e.target.value)}
+                        style={{ padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '14px', backgroundColor: t.bg, color: t.text }}
+                      />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                          type="number"
+                          placeholder="割引額 (円)"
+                          value={newTicketAmount}
+                          onChange={(e) => setNewTicketAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                          style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '14px', backgroundColor: t.bg, color: t.text }}
+                        />
+                        <button
+                          onClick={handleAddTicket}
+                          style={{ backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                        >
+                          追加
+                        </button>
                       </div>
-                    ))}
+                    </div>
+
+                    <div style={{ maxHeight: '180px', overflowY: 'auto', border: `1px solid ${t.border}`, borderRadius: '6px', padding: '6px', backgroundColor: t.bg }}>
+                      {tickets.map((tItem, index) => (
+                        <div key={tItem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: `1px solid ${t.border}`, backgroundColor: t.cardBg, marginBottom: '4px', borderRadius: '6px', textAlign: 'left' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: t.ticketText, flex: 1, textAlign: 'left' }}>{tItem.name} <span style={{ color: t.ticketAmount, fontWeight: 'normal' }}>(-¥{tItem.amount.toLocaleString()})</span></span>
+                          
+                          <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                            <button onClick={() => handleMoveTicket(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.bg, color: index === 0 ? t.subText : t.text, borderRadius: '4px', padding: '3px 8px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▲</button>
+                            <button onClick={() => handleMoveTicket(index, 'down')} disabled={index === tickets.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.bg, color: index === tickets.length - 1 ? t.subText : t.text, borderRadius: '4px', padding: '3px 8px', cursor: index === tickets.length - 1 ? 'default' : 'pointer', fontSize: '11px', fontWeight: 'bold' }}>▼</button>
+                            <button onClick={() => handleDeleteTicket(tItem.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '11px', cursor: 'pointer', marginLeft: '2px', fontWeight: 'bold' }}>削除</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <button
                   onClick={handleResetToDefault}
-                  style={{ backgroundColor: '#f3f4f6', color: '#4b5563', border: 'none', borderRadius: '6px', padding: '10px', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
+                  style={{ backgroundColor: t.bg, color: t.subText, border: `1px solid ${t.border}`, borderRadius: '6px', padding: '10px', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   商品・回数券のみ初期状態に戻す
                 </button>
@@ -1500,10 +1651,9 @@ export default function App() {
             {/* TAB 2: カラーモードの編集 */}
             {activeTab === 'theme' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px', textAlign: 'left' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937', margin: 0, textAlign: 'left' }}>テーマカラーの選択</h3>
-                <p style={{ fontSize: '13px', color: '#6b7280', margin: 0, textAlign: 'left' }}>画面全体の配色を切り替えます。</p>
+                <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left' }}>テーマカラーの選択</h3>
+                <p style={{ fontSize: '13px', color: t.subText, margin: 0, textAlign: 'left' }}>画面全体の配色を切り替えます。</p>
 
-                {/* 1. プリセットテーマ選択 */}
                 {(['light', 'dark', 'vivid', 'pastel'] as const).map((mode) => {
                   const themeItem = DEFAULT_THEMES[mode];
                   const isSelected = themeMode === mode;
@@ -1517,7 +1667,7 @@ export default function App() {
                         justifyContent: 'space-between',
                         padding: '14px 16px',
                         borderRadius: '10px',
-                        border: isSelected ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                        border: isSelected ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
                         backgroundColor: themeItem.bg,
                         color: themeItem.text,
                         cursor: 'pointer',
@@ -1526,12 +1676,11 @@ export default function App() {
                       }}
                     >
                       <span style={{ fontWeight: 'bold', fontSize: '15px' }}>{themeItem.name}</span>
-                      {isSelected && <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '18px' }}>✓</span>}
+                      {isSelected && <span style={{ color: t.productPrice, fontWeight: 'bold', fontSize: '18px' }}>✓</span>}
                     </button>
                   );
                 })}
 
-                {/* 2. カスタムテーマ選択 */}
                 <button
                   onClick={() => setThemeMode('custom')}
                   style={{
@@ -1540,27 +1689,26 @@ export default function App() {
                     justifyContent: 'space-between',
                     padding: '14px 16px',
                     borderRadius: '10px',
-                    border: themeMode === 'custom' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                    backgroundColor: '#ffffff',
-                    color: '#0f172a',
+                    border: themeMode === 'custom' ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                    backgroundColor: t.cardBg,
+                    color: t.text,
                     cursor: 'pointer',
                     boxShadow: themeMode === 'custom' ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none',
                     transition: 'all 0.2s ease'
                   }}
                 >
                   <span style={{ fontWeight: 'bold', fontSize: '15px' }}>🎨 カスタム（オリジナル）</span>
-                  {themeMode === 'custom' && <span style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '18px' }}>✓</span>}
+                  {themeMode === 'custom' && <span style={{ color: t.productPrice, fontWeight: 'bold', fontSize: '18px' }}>✓</span>}
                 </button>
 
-                {/* カスタムカラーピッカー */}
                 {themeMode === 'custom' && (
-                  <div style={{ backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '14px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#1e293b' }}>オリジナル配色の自由作成</div>
+                  <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '14px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', color: t.text }}>オリジナル配色の自由作成</div>
                     
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>メインカラー</div>
-                        <div style={{ fontSize: '11px', color: '#64748b' }}>ヘッダー・ボタン・アクセント</div>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.text }}>メインカラー</div>
+                        <div style={{ fontSize: '11px', color: t.subText }}>ヘッダー・ボタン・アクセント</div>
                       </div>
                       <input
                         type="color"
@@ -1572,8 +1720,8 @@ export default function App() {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>サブカラー</div>
-                        <div style={{ fontSize: '11px', color: '#64748b' }}>右側お会計内容エリア</div>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.text }}>サブカラー</div>
+                        <div style={{ fontSize: '11px', color: t.subText }}>右側お会計内容エリア</div>
                       </div>
                       <input
                         type="color"
@@ -1585,8 +1733,8 @@ export default function App() {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>商品エリア背景カラー</div>
-                        <div style={{ fontSize: '11px', color: '#64748b' }}>左側商品選択カード背景</div>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.text }}>商品エリア背景カラー</div>
+                        <div style={{ fontSize: '11px', color: t.subText }}>左側商品選択カード背景</div>
                       </div>
                       <input
                         type="color"
@@ -1598,8 +1746,8 @@ export default function App() {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>全体画面背景カラー</div>
-                        <div style={{ fontSize: '11px', color: '#64748b' }}>アプリ全体のバックグラウンド</div>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.text }}>全体画面背景カラー</div>
+                        <div style={{ fontSize: '11px', color: t.subText }}>アプリ全体のバックグラウンド</div>
                       </div>
                       <input
                         type="color"
@@ -1614,50 +1762,132 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 3: アプリ設定 */}
+            {/* TAB 3: アプリ設定（会員番号・回数券ON/OFF追加） */}
             {activeTab === 'settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '20px', textAlign: 'left' }}>
                 
-                {/* 1. アプリ名＆セクション見出し名の変更 */}
+                {/* 表示名設定 */}
                 <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div>
-                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937', marginBottom: '6px', textAlign: 'left' }}>アプリ名の変更</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>アプリ名の変更</h3>
                     <input
                       type="text"
                       value={appName}
                       onChange={(e) => setAppName(e.target.value)}
                       placeholder="例: 簡単会計"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: 'bold', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '14px', fontWeight: 'bold', boxSizing: 'border-box', backgroundColor: t.bg, color: t.text }}
                     />
                   </div>
 
                   <div>
-                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937', marginBottom: '6px', textAlign: 'left' }}>商品エリアの表示名</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>商品エリアの表示名</h3>
                     <input
                       type="text"
                       value={productSectionTitle}
                       onChange={(e) => setProductSectionTitle(e.target.value)}
                       placeholder="例: 商品選択"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: 'bold', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '14px', fontWeight: 'bold', boxSizing: 'border-box', backgroundColor: t.bg, color: t.text }}
                     />
                   </div>
 
                   <div>
-                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937', marginBottom: '6px', textAlign: 'left' }}>回数券エリアの表示名</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>回数券エリアの表示名</h3>
                     <input
                       type="text"
                       value={ticketSectionTitle}
                       onChange={(e) => setTicketSectionTitle(e.target.value)}
                       placeholder="例: 回数券"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: 'bold', boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '14px', fontWeight: 'bold', boxSizing: 'border-box', backgroundColor: t.bg, color: t.text }}
                     />
                   </div>
                 </div>
 
-                {/* 2. 消費税計算設定 ＆ 税率調整 */}
-                <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px', textAlign: 'left' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937', marginBottom: '6px', textAlign: 'left' }}>消費税設定</h3>
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '12px', textAlign: 'left' }}>お会計に消費税を自動加算するか設定します。</p>
+                {/* 会員番号入力 ON / OFF */}
+                <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>会員番号入力機能</h3>
+                  <p style={{ fontSize: '12px', color: t.subText, marginBottom: '10px', textAlign: 'left' }}>メイン画面の「会員番号」入力欄を表示するか設定します。</p>
+                  
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      onClick={() => setUseMemberNumber(true)}
+                      style={{
+                        flex: 1,
+                        padding: '10px 0',
+                        borderRadius: '8px',
+                        border: useMemberNumber ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                        backgroundColor: useMemberNumber ? t.productBg : t.cardBg,
+                        color: useMemberNumber ? t.productPrice : t.subText,
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ON (表示する)
+                    </button>
+                    <button
+                      onClick={() => setUseMemberNumber(false)}
+                      style={{
+                        flex: 1,
+                        padding: '10px 0',
+                        borderRadius: '8px',
+                        border: !useMemberNumber ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                        backgroundColor: !useMemberNumber ? t.productBg : t.cardBg,
+                        color: !useMemberNumber ? t.productPrice : t.subText,
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      OFF (表示しない)
+                    </button>
+                  </div>
+                </div>
+
+                {/* 回数券エリア ON / OFF */}
+                <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>回数券エリア機能</h3>
+                  <p style={{ fontSize: '12px', color: t.subText, marginBottom: '10px', textAlign: 'left' }}>メイン画面の「回数券」選択エリアを表示するか設定します。</p>
+                  
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      onClick={() => setUseTickets(true)}
+                      style={{
+                        flex: 1,
+                        padding: '10px 0',
+                        borderRadius: '8px',
+                        border: useTickets ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                        backgroundColor: useTickets ? t.productBg : t.cardBg,
+                        color: useTickets ? t.productPrice : t.subText,
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ON (表示する)
+                    </button>
+                    <button
+                      onClick={() => setUseTickets(false)}
+                      style={{
+                        flex: 1,
+                        padding: '10px 0',
+                        borderRadius: '8px',
+                        border: !useTickets ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                        backgroundColor: !useTickets ? t.productBg : t.cardBg,
+                        color: !useTickets ? t.productPrice : t.subText,
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      OFF (表示しない)
+                    </button>
+                  </div>
+                </div>
+
+                {/* 消費税設定 */}
+                <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>消費税設定</h3>
+                  <p style={{ fontSize: '12px', color: t.subText, marginBottom: '12px', textAlign: 'left' }}>お会計に消費税を自動加算するか設定します。</p>
                   
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
                     <button
@@ -1666,9 +1896,9 @@ export default function App() {
                         flex: 1,
                         padding: '10px 0',
                         borderRadius: '8px',
-                        border: !useTax ? '2px solid #2563eb' : '1px solid #d1d5db',
-                        backgroundColor: !useTax ? '#eff6ff' : '#ffffff',
-                        color: !useTax ? '#2563eb' : '#4b5563',
+                        border: !useTax ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                        backgroundColor: !useTax ? t.productBg : t.cardBg,
+                        color: !useTax ? t.productPrice : t.subText,
                         fontWeight: 'bold',
                         fontSize: '14px',
                         cursor: 'pointer'
@@ -1682,9 +1912,9 @@ export default function App() {
                         flex: 1,
                         padding: '10px 0',
                         borderRadius: '8px',
-                        border: useTax ? '2px solid #2563eb' : '1px solid #d1d5db',
-                        backgroundColor: useTax ? '#eff6ff' : '#ffffff',
-                        color: useTax ? '#2563eb' : '#4b5563',
+                        border: useTax ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                        backgroundColor: useTax ? t.productBg : t.cardBg,
+                        color: useTax ? t.productPrice : t.subText,
                         fontWeight: 'bold',
                         fontSize: '14px',
                         cursor: 'pointer'
@@ -1695,29 +1925,29 @@ export default function App() {
                   </div>
 
                   {useTax && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#f8fafc', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                      <label style={{ fontSize: '14px', fontWeight: 'bold', color: '#334155' }}>適用税率:</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: t.bg, padding: '10px 12px', borderRadius: '6px', border: `1px solid ${t.border}` }}>
+                      <label style={{ fontSize: '14px', fontWeight: 'bold', color: t.text }}>適用税率:</label>
                       <input
                         type="number"
                         value={taxRate}
                         onChange={(e) => setTaxRate(Number(e.target.value))}
-                        style={{ width: '70px', padding: '6px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '15px', fontWeight: 'bold', textAlign: 'right' }}
+                        style={{ width: '70px', padding: '6px 8px', borderRadius: '4px', border: `1px solid ${t.border}`, fontSize: '15px', fontWeight: 'bold', textAlign: 'right', backgroundColor: t.cardBg, color: t.text }}
                       />
-                      <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#334155' }}>%</span>
+                      <span style={{ fontSize: '15px', fontWeight: 'bold', color: t.text }}>%</span>
                     </div>
                   )}
                 </div>
 
-                {/* 3. スプレッドシート連携（利用有無 ＆ GAS URL設定） */}
-                <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px', textAlign: 'left' }}>
+                {/* スプレッドシート連携設定 */}
+                <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1f2937', margin: 0, textAlign: 'left' }}>📊 スプレッドシート連携</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left' }}>📊 レジ用スプレッドシート連携</h3>
                     <button
                       onClick={() => setShowGasGuide(!showGasGuide)}
                       style={{
-                        backgroundColor: '#eff6ff',
-                        color: '#2563eb',
-                        border: '1px solid #bfdbfe',
+                        backgroundColor: t.productBg,
+                        color: t.productPrice,
+                        border: `1px solid ${t.productBorder}`,
                         borderRadius: '6px',
                         padding: '4px 8px',
                         fontSize: '12px',
@@ -1728,7 +1958,7 @@ export default function App() {
                       {showGasGuide ? 'ガイドを閉じる' : '❓ 設定方法・解説'}
                     </button>
                   </div>
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px', textAlign: 'left' }}>会計データをスプレッドシートへ送信・記録するか設定します。</p>
+                  <p style={{ fontSize: '12px', color: t.subText, marginBottom: '10px', textAlign: 'left' }}>会計データをスプレッドシートへ送信・記録するか設定します。</p>
 
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
                     <button
@@ -1737,9 +1967,9 @@ export default function App() {
                         flex: 1,
                         padding: '10px 0',
                         borderRadius: '8px',
-                        border: useSpreadsheet ? '2px solid #2563eb' : '1px solid #d1d5db',
-                        backgroundColor: useSpreadsheet ? '#eff6ff' : '#ffffff',
-                        color: useSpreadsheet ? '#2563eb' : '#4b5563',
+                        border: useSpreadsheet ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                        backgroundColor: useSpreadsheet ? t.productBg : t.cardBg,
+                        color: useSpreadsheet ? t.productPrice : t.subText,
                         fontWeight: 'bold',
                         fontSize: '14px',
                         cursor: 'pointer'
@@ -1753,9 +1983,9 @@ export default function App() {
                         flex: 1,
                         padding: '10px 0',
                         borderRadius: '8px',
-                        border: !useSpreadsheet ? '2px solid #2563eb' : '1px solid #d1d5db',
-                        backgroundColor: !useSpreadsheet ? '#eff6ff' : '#ffffff',
-                        color: !useSpreadsheet ? '#2563eb' : '#4b5563',
+                        border: !useSpreadsheet ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                        backgroundColor: !useSpreadsheet ? t.productBg : t.cardBg,
+                        color: !useSpreadsheet ? t.productPrice : t.subText,
                         fontWeight: 'bold',
                         fontSize: '14px',
                         cursor: 'pointer'
@@ -1772,13 +2002,13 @@ export default function App() {
                         value={gasUrl}
                         onChange={(e) => setGasUrl(e.target.value)}
                         placeholder="https://script.google.com/macros/s/.../exec"
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', boxSizing: 'border-box', marginBottom: '8px' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '13px', boxSizing: 'border-box', marginBottom: '8px', backgroundColor: t.bg, color: t.text }}
                       />
 
                       {gasUrl !== DEFAULT_GAS_URL && (
                         <button
                           onClick={() => setGasUrl(DEFAULT_GAS_URL)}
-                          style={{ backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '4px', padding: '6px 10px', fontSize: '12px', fontWeight: 'bold', color: '#4b5563', cursor: 'pointer', marginBottom: '8px' }}
+                          style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '4px', padding: '6px 10px', fontSize: '12px', fontWeight: 'bold', color: t.subText, cursor: 'pointer', marginBottom: '8px' }}
                         >
                           デフォルトURLに戻す
                         </button>
@@ -1787,30 +2017,29 @@ export default function App() {
                   )}
 
                   {showGasGuide && (
-                    <div style={{ backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px 14px', fontSize: '13px', color: '#334155', marginTop: '10px', lineHeight: '1.6', textAlign: 'left' }}>
-                      
-                      <div style={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '6px', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px', fontSize: '14px', textAlign: 'left' }}>
+                    <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px 14px', fontSize: '13px', color: t.text, marginTop: '10px', lineHeight: '1.6', textAlign: 'left' }}>
+                      <div style={{ fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', borderBottom: `1px solid ${t.border}`, paddingBottom: '4px', fontSize: '14px', textAlign: 'left' }}>
                         📋 スプレッドシートの事前準備項目
                       </div>
-                      <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#475569', textAlign: 'left' }}>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: t.subText, textAlign: 'left' }}>
                         ※以下のプログラム（`SAMPLE_GAS_CODE`）を設定した場合、送信時に<b>1行目の見出し（ヘッダー）が自動作成</b>されます。手動で準備する場合は、スプレッドシートの1行目に以下の項目名を左右に並べて記載してください：
                       </p>
                       
-                      <div style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 10px', fontSize: '12px', color: '#0f172a', marginBottom: '14px', textAlign: 'left' }}>
+                      <div style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '6px', padding: '8px 10px', fontSize: '12px', color: t.text, marginBottom: '14px', textAlign: 'left' }}>
                         <b>[ 基本データ列 ]</b><br />
                         `日時` / `会員番号` / `小計` / `消費税` / `お支払い合計` / `お預かり` / `お釣り`<br /><br />
                         <b>[ 商品・回数券数量列 ]</b><br />
                         `大人 A` / `子供 A` / `★大人回数券` ... （※登録している商品名・回数券名と同名の列）
                       </div>
 
-                      <div style={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '6px', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px', fontSize: '14px', textAlign: 'left' }}>
+                      <div style={{ fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', borderBottom: `1px solid ${t.border}`, paddingBottom: '4px', fontSize: '14px', textAlign: 'left' }}>
                         📖 新しいスプレッドシートの作成手順
                       </div>
                       <ol style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
                         <li style={{ textAlign: 'left' }}>連携したい<b>Googleスプレッドシート</b>を新規作成して開きます。</li>
                         <li style={{ textAlign: 'left' }}>画面上部メニューの<b>「拡張機能」➔「Apps Script」</b>をクリックします。</li>
                         <li style={{ textAlign: 'left' }}>表示されたエディタ内のコードを全消去し、以下のプログラムを貼り付けて保存（Ctrl+S）します：
-                          <div style={{ backgroundColor: '#0f172a', color: '#38bdf8', padding: '8px 10px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '11px', marginTop: '4px', overflowX: 'auto', whiteSpace: 'pre', textAlign: 'left' }}>
+                          <div style={{ backgroundColor: '#0f172a', color: '#38bdf8', padding: '6px 8px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '11px', marginTop: '4px', overflowX: 'auto', whiteSpace: 'pre', textAlign: 'left' }}>
                             {SAMPLE_GAS_CODE}
                           </div>
                         </li>
@@ -1827,10 +2056,10 @@ export default function App() {
                   )}
                 </div>
 
-                {/* 4. 全体一括初期化（リセット） */}
-                <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px', textAlign: 'left' }}>
+                {/* 全体データのリセット */}
+                <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#dc2626', marginBottom: '6px', textAlign: 'left' }}>全体データのリセット</h3>
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px', textAlign: 'left' }}>商品・連携URL・消費税・アプリ名等すべての設定を初期化します。</p>
+                  <p style={{ fontSize: '12px', color: t.subText, marginBottom: '10px', textAlign: 'left' }}>商品・連携URL・消費税・アプリ名等すべての設定を初期化します。</p>
                   
                   <button
                     onClick={handleResetAllSettings}
@@ -1853,11 +2082,139 @@ export default function App() {
               </div>
             )}
 
+            {/* TAB 4: 📖 使い方 */}
+            {activeTab === 'guide' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>📖 レジの使い方ガイド</h3>
+
+                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>1. 商品・回数券の選択</div>
+                  画面左側のリストから、注文された商品や利用する回数券をタップします。カート内の数量変更（＋/－）や1部削除も画面上で簡単に行えます。
+                </div>
+
+                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>2. 会員番号の入力（任意）</div>
+                  「会員番号」機能がONの場合、番号欄をタップすると専用テンキーが表示されます。番号を入力して「決定」を押すとカートに保持されます。
+                </div>
+
+                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>3. お預かり金額とお釣り</div>
+                  「ぴったり」や「+1000」などのクイックボタン、または金額欄をタップして表示されるテンキーから預かり現金を自動計算できます。
+                </div>
+
+                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>4. 会計完了とスプレッドシート送信</div>
+                  「1. 会計を完了する」でお渡し確認を行い、「2. シートへ送信」を押すことで外部スプレッドシートへ記録が行われます。
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: ❓ FAQ ＆ プライバシーポリシー */}
+            {activeTab === 'faq' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
+                <div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: '0 0 10px 0', textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>❓ よくある質問（FAQ）</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '10px 12px' }}>
+                      <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '13px', marginBottom: '2px' }}>Q. インターネット接続がなくても使えますか？</div>
+                      <div style={{ color: t.subText, fontSize: '12px' }}>A. はい、ブラウザ上で動作するため会計計算自体はオフラインでも可能です。スプレッドシートへの記録時のみオンライン接続が必要です。</div>
+                    </div>
+
+                    <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '10px 12px' }}>
+                      <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '13px', marginBottom: '2px' }}>Q. 設定した商品やカラーテーマは消えますか？</div>
+                      <div style={{ color: t.subText, fontSize: '12px' }}>A. ブラウザの内部ストレージ（localStorage）に自動記憶されますので、ページを閉じても次回そのまま利用可能です。</div>
+                    </div>
+
+                    <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '10px 12px' }}>
+                      <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '13px', marginBottom: '2px' }}>Q. シートにデータが記録されません。</div>
+                      <div style={{ color: t.subText, fontSize: '12px' }}>A. 「アプリ設定」タブでスプレッドシート連携が「ON」になっており、GASのウェブアプリURLが正しく設定されているかご確認ください。</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '14px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: '0 0 8px 0', textAlign: 'left' }}>🔒 プライバシーポリシー（個人情報保護方針）</h3>
+                  <div style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '10px 12px', fontSize: '11px', color: t.subText }}>
+                    本アプリ（以下「当サービス」）は、ユーザーのプライバシー保護を最優先に考えております。<br /><br />
+                    <b>1. 収集する情報</b><br />
+                    入力された会員番号、商品選択データおよび会計設定（テーマ色・店舗名等）は、ユーザーの端末（ローカルストレージ）および指定されたGoogleスプレッドシートに送信・保持されます。<br /><br />
+                    <b>2. 利用目的</b><br />
+                    収集したデータは、レジ会計の記録・売上集計およびアプリの設定保持のみに使用し、第三者へ無断で提供・販売することは一切ありません。
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 6: ✉️ お問い合わせ */}
+            {activeTab === 'contact' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px', textAlign: 'left' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>✉️ お問い合わせ</h3>
+                <p style={{ fontSize: '12px', color: t.subText, margin: 0 }}>ご意見・ご要望・不具合のご報告は以下のフォームより送信してください。</p>
+
+                <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', color: t.text }}>お名前 <span style={{ color: '#dc2626' }}>*</span></label>
+                    <input
+                      type="text"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      placeholder="山田 太郎"
+                      required
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '13px', boxSizing: 'border-box', backgroundColor: t.bg, color: t.text }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', color: t.text }}>メールアドレス</label>
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      placeholder="example@email.com"
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '13px', boxSizing: 'border-box', backgroundColor: t.bg, color: t.text }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', color: t.text }}>件名</label>
+                    <input
+                      type="text"
+                      value={contactSubject}
+                      onChange={(e) => setContactSubject(e.target.value)}
+                      placeholder="機能の要望について"
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '13px', boxSizing: 'border-box', backgroundColor: t.bg, color: t.text }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', color: t.text }}>お問い合わせ内容 <span style={{ color: '#dc2626' }}>*</span></label>
+                    <textarea
+                      rows={5}
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      placeholder="お問い合わせ内容をご記入ください..."
+                      required
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '13px', boxSizing: 'border-box', fontFamily: 'sans-serif', backgroundColor: t.bg, color: t.text }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isContactSubmitting}
+                    style={{ backgroundColor: isContactSubmitting ? t.subText : t.productPrice, color: '#ffffff', border: 'none', borderRadius: '6px', padding: '12px', fontWeight: 'bold', fontSize: '14px', cursor: isContactSubmitting ? 'wait' : 'pointer', marginTop: '6px' }}
+                  >
+                    {isContactSubmitting ? '送信中...' : '送信する'}
+                  </button>
+                </form>
+              </div>
+            )}
+
             {/* フッター */}
-            <div style={{ marginTop: 'auto', borderTop: '1px solid #e5e7eb', paddingTop: '16px', flexShrink: 0 }}>
+            <div style={{ marginTop: 'auto', borderTop: `1px solid ${t.border}`, paddingTop: '16px', flexShrink: 0 }}>
               <button
                 onClick={() => setIsMenuOpen(false)}
-                style={{ width: '100%', backgroundColor: '#1f2937', color: '#ffffff', border: 'none', borderRadius: '6px', padding: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+                style={{ width: '100%', backgroundColor: t.headerBg, color: t.headerText, border: 'none', borderRadius: '6px', padding: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
               >
                 閉じる
               </button>
