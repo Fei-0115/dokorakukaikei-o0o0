@@ -221,7 +221,7 @@ function generateCustomTheme(primary: string, secondary: string, customBg: strin
   };
 }
 
-// 八角形×羊SVG
+// 八角形×羊SVG（isEating: 草食い、isHappy: 喜ぶ笑顔＋キラキラ演出）
 const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false }: { color?: string; isEating?: boolean; isHappy?: boolean }) => (
   <svg
     width="34"
@@ -231,6 +231,7 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
     xmlns="http://www.w3.org/2000/svg"
     style={{ flexShrink: 0, display: 'block' }}
   >
+    {/* 八角形 */}
     <polygon
       points="30,5 70,5 95,30 95,70 70,92 30,92 5,70 5,30"
       stroke={color}
@@ -239,9 +240,11 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       strokeLinejoin="round"
     />
 
+    {/* 前足 */}
     <path d="M38,91 C38,97 44,97 44,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
     <path d="M56,91 C56,97 62,97 62,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
 
+    {/* 顔輪郭 */}
     <path
       d="M38,40 C32,40 28,46 30,52 C26,56 28,64 34,66 C38,74 62,74 66,66 C72,64 74,56 70,52 C72,46 68,40 62,40 C58,34 42,34 38,40 Z"
       stroke={color}
@@ -251,9 +254,11 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       strokeLinejoin="round"
     />
 
+    {/* ぐるぐる角 */}
     <path d="M34,42 C20,32 10,46 18,58 C24,66 34,60 30,50 C28,44 22,46 22,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
     <path d="M66,42 C80,32 90,46 82,58 C76,66 66,60 70,50 C72,44 78,46 78,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
 
+    {/* 目 */}
     {isHappy ? (
       <g>
         <path d="M39,52 Q43,46 47,52" stroke={color} strokeWidth="3" strokeLinecap="round" fill="none" />
@@ -266,12 +271,14 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       </g>
     )}
 
+    {/* 口・鼻ライン */}
     {isHappy ? (
       <path d="M50,56 L50,59 M44,61 C47,67 53,67 56,61" stroke={color} strokeWidth="3" strokeLinecap="round" fill="none" />
     ) : (
       <path d="M50,56 L50,60 M46,63 C48,65 52,65 54,63" stroke={color} strokeWidth="3" strokeLinecap="round" />
     )}
 
+    {/* 草を食べるアニメーションパーツ */}
     {isEating && (
       <g>
         <path d="M52,62 Q62,64 68,58 M52,62 Q66,68 74,66 M52,62 Q60,72 66,74" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" fill="none" />
@@ -281,6 +288,7 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       </g>
     )}
 
+    {/* 喜ぶときのキラキラ星演出 */}
     {isHappy && (
       <g fill="#facc15">
         <path d="M22,22 L24,27 L29,29 L24,31 L22,36 L20,31 L15,29 L20,27 Z" />
@@ -336,8 +344,9 @@ const DEFAULT_TICKETS: Ticket[] = [
 ];
 
 export default function App() {
+  // アプリ設定（初期タイトルを「POSheep」に変更）
   const [appName, setAppName] = useState<string>(() => {
-    return localStorage.getItem('pos_app_name') || 'どこレジ';
+    return localStorage.getItem('pos_app_name') || 'POSheep';
   });
 
   const [productSectionTitle, setProductSectionTitle] = useState<string>(() => {
@@ -654,7 +663,7 @@ export default function App() {
     if (confirm('⚠️ アプリ全体のすべての設定（商品・連携URL・消費税・アプリ名・テーマ等）を初期化しますか？')) {
       setProducts(DEFAULT_PRODUCTS);
       setTickets(DEFAULT_TICKETS);
-      setAppName('どこレジ');
+      setAppName('POSheep');
       setProductSectionTitle('商品選択');
       setTicketSectionTitle('回数券');
       setUseMemberNumber(true);
@@ -873,22 +882,24 @@ export default function App() {
       minHeight: '100vh',
       fontFamily: 'sans-serif',
       backgroundColor: t.bg,
-      padding: '12px 16px',
+      padding: '0 0 12px 0',
       gap: '12px',
       boxSizing: 'border-box',
       transition: 'background-color 0.3s ease',
       margin: 0,
     }}>
       
-      {/* 1. ヘッダー */}
+      {/* 1. 固定ヘッダー */}
       <div style={{
         position: 'sticky',
         top: 0,
+        left: 0,
+        right: 0,
         zIndex: 100,
         backgroundColor: t.headerBg,
-        padding: '10px 16px',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+        padding: '12px 20px',
+        borderRadius: '0',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         display: 'flex',
         flexWrap: 'nowrap',
         alignItems: 'center',
@@ -933,7 +944,7 @@ export default function App() {
       </div>
 
       {/* メインエリア */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', width: '100%', flex: 1, boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', width: '100%', flex: 1, boxSizing: 'border-box', padding: '0 16px' }}>
         
         {/* 左側：商品・回数券選択 */}
         <div style={{
@@ -1416,7 +1427,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 完了通知ポップアップ（喜ぶ笑顔羊＆キラキラ演出） */}
+      {/* 完了通知ポップアップ */}
       {showSuccessModal && (
         <div 
           onClick={() => setShowSuccessModal(false)}
@@ -1975,7 +1986,7 @@ export default function App() {
                       type="text"
                       value={appName}
                       onChange={(e) => setAppName(e.target.value)}
-                      placeholder="例: どこレジ"
+                      placeholder="例: POSheep"
                       style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '14px', fontWeight: 'bold', boxSizing: 'border-box', backgroundColor: t.bg, color: t.text }}
                     />
                   </div>
@@ -2254,7 +2265,7 @@ export default function App() {
                 </div>
 
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#dc2626', marginBottom: '6px', textAlign: 'left' }}>全体データのリセット</h3>
+                  <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#dc2626', marginBottom: '6px', textAlign: 'left' }}>⚠️ 全体データのリセット</h3>
                   <p style={{ fontSize: '12px', color: t.subText, marginBottom: '10px', textAlign: 'left' }}>商品・連携URL・消費税・アプリ名等すべての設定を初期化します。</p>
                   
                   <button
