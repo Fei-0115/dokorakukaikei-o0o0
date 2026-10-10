@@ -221,12 +221,72 @@ function generateCustomTheme(primary: string, secondary: string, customBg: strin
   };
 }
 
+// 羊ロゴSVG
+const OctagonSheepLogo = ({ color = '#ffffff' }: { color?: string }) => (
+  <svg
+    width="32"
+    height="32"
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={{ flexShrink: 0, display: 'block' }}
+  >
+    <polygon
+      points="30,5 70,5 95,30 95,70 70,92 30,92 5,70 5,30"
+      stroke={color}
+      strokeWidth="4.5"
+      fill="none"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M38,91 C38,97 44,97 44,91 Z"
+      stroke={color}
+      strokeWidth="3.5"
+      fill={color}
+    />
+    <path
+      d="M56,91 C56,97 62,97 62,91 Z"
+      stroke={color}
+      strokeWidth="3.5"
+      fill={color}
+    />
+    <path
+      d="M38,40 C32,40 28,46 30,52 C26,56 28,64 34,66 C38,74 62,74 66,66 C72,64 74,56 70,52 C72,46 68,40 62,40 C58,34 42,34 38,40 Z"
+      stroke={color}
+      strokeWidth="3.5"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M34,42 C20,32 10,46 18,58 C24,66 34,60 30,50 C28,44 22,46 22,50"
+      stroke={color}
+      strokeWidth="3.5"
+      fill="none"
+      strokeLinecap="round"
+    />
+    <path
+      d="M66,42 C80,32 90,46 82,58 C76,66 66,60 70,50 C72,44 78,46 78,50"
+      stroke={color}
+      strokeWidth="3.5"
+      fill="none"
+      strokeLinecap="round"
+    />
+    <circle cx="43" cy="51" r="2.5" fill={color} />
+    <circle cx="57" cy="51" r="2.5" fill={color} />
+    <path
+      d="M50,56 L50,60 M46,63 C48,65 52,65 54,63"
+      stroke={color}
+      strokeWidth="3"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 // ==========================================
-// 2. Google Apps Script（GAS）URL ＆ サンプルコード
+// 2. Google Apps Script（GAS）URL
 // ==========================================
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwyLOy2SO5X9bvR8SBc_uPy1ICbw6D3u_ABkQYRHAEJgNMK3LeNl7EAsvassfClx26CQA/exec';
-
-// ✉️ お問い合わせ受信用スプレッドシートのGAS URL
 const CONTACT_GAS_URL = 'https://script.google.com/macros/s/AKfycby-K4JPPfPLIFzO0wJmv53JV-7G6uSKUaWQEQlVFpNem7ZuucK8Q88464cOc8QyGPMwaw/exec';
 
 const SAMPLE_GAS_CODE = `function doPost(e) {
@@ -269,9 +329,9 @@ const DEFAULT_TICKETS: Ticket[] = [
 ];
 
 export default function App() {
-  // アプリ設定
+  // アプリ設定（初期名を「どこレジ」に変更）
   const [appName, setAppName] = useState<string>(() => {
-    return localStorage.getItem('pos_app_name') || '簡単会計';
+    return localStorage.getItem('pos_app_name') || 'どこレジ';
   });
 
   const [productSectionTitle, setProductSectionTitle] = useState<string>(() => {
@@ -282,7 +342,6 @@ export default function App() {
     return localStorage.getItem('pos_ticket_section_title') || '回数券';
   });
 
-  // 会員番号・回数券のON/OFF設定
   const [useMemberNumber, setUseMemberNumber] = useState<boolean>(() => {
     const saved = localStorage.getItem('pos_use_member_number');
     return saved ? JSON.parse(saved) : true;
@@ -314,7 +373,6 @@ export default function App() {
 
   const [showGasGuide, setShowGasGuide] = useState<boolean>(false);
 
-  // カラーモード状態
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('pos_theme');
     return (saved as ThemeMode) || 'light';
@@ -340,21 +398,17 @@ export default function App() {
     ? generateCustomTheme(customPrimary, customSecondary, customBg, customCardBg) 
     : DEFAULT_THEMES[themeMode];
 
-  // サイドドロワーメニュー
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'items' | 'theme' | 'settings' | 'guide' | 'faq' | 'contact'>('items');
 
-  // お問い合わせフォーム入力用状態 ＆ 送信フラグ
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactSubject, setContactSubject] = useState('');
   const [contactMessage, setContactMessage] = useState('');
   const [isContactSubmitting, setIsContactSubmitting] = useState(false);
 
-  // リスト全画面表示モーダル
   const [expandModalType, setExpandModalType] = useState<'products' | 'tickets' | null>(null);
 
-  // 商品リスト・回数券リスト
   const [products, setProducts] = useState<Item[]>(() => {
     const saved = localStorage.getItem('pos_products');
     return saved ? JSON.parse(saved) : DEFAULT_PRODUCTS;
@@ -365,17 +419,14 @@ export default function App() {
     return saved ? JSON.parse(saved) : DEFAULT_TICKETS;
   });
 
-  // テンキー表示フラグ
   const [showMemberKeypad, setShowMemberKeypad] = useState<boolean>(false);
   const [showCashKeypad, setShowCashKeypad] = useState<boolean>(false);
 
-  // 新規追加フォーム
   const [newProdName, setNewProdName] = useState('');
   const [newProdPrice, setNewProdPrice] = useState<number | ''>('');
   const [newTicketName, setNewTicketName] = useState('');
   const [newTicketAmount, setNewTicketAmount] = useState<number | ''>('');
 
-  // レジ状態
   const [cart, setCart] = useState<{ item: Item; quantity: number }[]>([]);
   const [appliedTickets, setAppliedTickets] = useState<{ ticket: Ticket; quantity: number }[]>([]);
   const [receivedAmount, setReceivedAmount] = useState<number | ''>('');
@@ -383,7 +434,6 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
-  // ストレージ保存処理
   useEffect(() => {
     localStorage.setItem('pos_app_name', appName);
   }, [appName]);
@@ -448,13 +498,11 @@ export default function App() {
     localStorage.setItem('pos_tickets', JSON.stringify(tickets));
   }, [tickets]);
 
-  // 時計更新
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // スマホサイズ用に年表示を省いた日付フォーマット
   const formattedDate = currentTime.toLocaleDateString('ja-JP', {
     month: 'numeric',
     day: 'numeric',
@@ -466,7 +514,6 @@ export default function App() {
     second: '2-digit',
   });
 
-  // --- お問い合わせ送信処理 ---
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactName || !contactMessage) {
@@ -509,7 +556,6 @@ export default function App() {
     }
   };
 
-  // --- 商品・回数券処理 ---
   const handleAddProduct = () => {
     if (!newProdName || newProdPrice === '') return;
     const newItem: Item = {
@@ -569,12 +615,11 @@ export default function App() {
     }
   };
 
-  // --- 全体初期化リセット ---
   const handleResetAllSettings = () => {
     if (confirm('⚠️ アプリ全体のすべての設定（商品・連携URL・消費税・アプリ名・テーマ等）を初期化しますか？')) {
       setProducts(DEFAULT_PRODUCTS);
       setTickets(DEFAULT_TICKETS);
-      setAppName('簡単会計');
+      setAppName('どこレジ');
       setProductSectionTitle('商品選択');
       setTicketSectionTitle('回数券');
       setUseMemberNumber(true);
@@ -610,12 +655,10 @@ export default function App() {
     }
   };
 
-  // --- お預かり金額加算 ---
   const addReceivedAmount = (amount: number) => {
     setReceivedAmount((prev) => (typeof prev === 'number' ? prev + amount : amount));
   };
 
-  // --- テンキー操作 ---
   const handleMemberKeypadPress = (val: string) => setMemberNumber((prev) => prev + val);
   const handleMemberKeypadBackspace = () => setMemberNumber((prev) => prev.slice(0, -1));
   const handleMemberKeypadClear = () => setMemberNumber('');
@@ -638,7 +681,6 @@ export default function App() {
 
   const handleCashKeypadClear = () => setReceivedAmount('');
 
-  // --- カート操作 ---
   const addToCart = (product: Item) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.item.id === product.id);
@@ -706,7 +748,6 @@ export default function App() {
     setMemberNumber('');
   };
 
-  // --- 計算 ---
   const subtotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
   const totalTicketAmount = appliedTickets.reduce((sum, t) => sum + t.ticket.amount * t.quantity, 0);
   
@@ -798,19 +839,20 @@ export default function App() {
       gap: '12px',
       boxSizing: 'border-box',
       transition: 'background-color 0.3s ease',
+      overflowX: 'hidden'
     }}>
       
-      {/* 1. ヘッダー（スマホサイズでも必ず1行に収まるコンパクト設計） */}
+      {/* 1. ヘッダー（中央寄りずれ防止＆左右フィット） */}
       <div style={{
         position: 'sticky',
         top: 0,
         zIndex: 100,
         backgroundColor: t.headerBg,
-        padding: '10px 14px',
+        padding: '10px 16px',
         borderRadius: '8px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
         display: 'flex',
-        flexWrap: 'nowrap', // 折り返しを強制無効化
+        flexWrap: 'nowrap',
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
@@ -818,7 +860,7 @@ export default function App() {
         gap: '8px',
         flexShrink: 0
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <button
             onClick={() => setIsMenuOpen(true)}
             title="設定メニューを開く"
@@ -839,6 +881,8 @@ export default function App() {
             ☰
           </button>
 
+          <OctagonSheepLogo color={t.headerText} />
+
           <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: t.headerText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {appName}
           </h1>
@@ -850,12 +894,12 @@ export default function App() {
         </div>
       </div>
 
-      {/* メインエリア */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', width: '100%', flex: 1 }}>
+      {/* メインエリア（右寄り防止・レスポンシブ整列） */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', width: '100%', flex: 1, boxSizing: 'border-box' }}>
         
         {/* 左側：商品・回数券選択 */}
         <div style={{
-          flex: '1 1 340px',
+          flex: '1 1 500px',
           backgroundColor: t.cardBg,
           padding: '16px',
           borderRadius: '12px',
@@ -905,13 +949,13 @@ export default function App() {
 
             {/* カスタマイズ可能な商品選択セクション見出し */}
             <h2 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: t.text, textAlign: 'left' }}>{productSectionTitle}</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', marginBottom: '16px' }}>
               {products.map((product) => (
                 <button
                   key={product.id}
                   onClick={() => addToCart(product)}
                   style={{
-                    padding: '10px 12px',
+                    padding: '12px 14px',
                     backgroundColor: t.productBg,
                     border: `1px solid ${t.productBorder}`,
                     borderRadius: '8px',
@@ -920,7 +964,7 @@ export default function App() {
                   }}
                 >
                   <div style={{ fontWeight: 'bold', fontSize: '15px', color: t.productText }}>{product.name}</div>
-                  <div style={{ color: t.productPrice, fontWeight: 'bold', marginTop: '2px', fontSize: '14px' }}>¥{product.price.toLocaleString()}</div>
+                  <div style={{ color: t.productPrice, fontWeight: 'bold', marginTop: '4px', fontSize: '14px' }}>¥{product.price.toLocaleString()}</div>
                 </button>
               ))}
             </div>
@@ -929,13 +973,13 @@ export default function App() {
             {useTickets && (
               <>
                 <h2 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: t.text, borderTop: `1px solid ${t.border}`, paddingTop: '12px', textAlign: 'left' }}>{ticketSectionTitle}</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', marginBottom: '12px' }}>
                   {tickets.map((ticket) => (
                     <button
                       key={ticket.id}
                       onClick={() => applyTicket(ticket)}
                       style={{
-                        padding: '10px 12px',
+                        padding: '12px 14px',
                         backgroundColor: t.ticketBg,
                         border: `1px solid ${t.ticketBorder}`,
                         borderRadius: '8px',
@@ -944,7 +988,7 @@ export default function App() {
                       }}
                     >
                       <div style={{ fontWeight: 'bold', fontSize: '15px', color: t.ticketText }}>{ticket.name}</div>
-                      <div style={{ color: t.ticketAmount, fontWeight: 'bold', marginTop: '2px', fontSize: '14px' }}>-¥{ticket.amount.toLocaleString()}</div>
+                      <div style={{ color: t.ticketAmount, fontWeight: 'bold', marginTop: '4px', fontSize: '14px' }}>-¥{ticket.amount.toLocaleString()}</div>
                     </button>
                   ))}
                 </div>
@@ -957,7 +1001,7 @@ export default function App() {
               onClick={clearCart}
               style={{
                 marginTop: '8px',
-                padding: '10px 12px',
+                padding: '12px',
                 backgroundColor: '#ef4444',
                 color: '#ffffff',
                 border: 'none',
@@ -974,9 +1018,9 @@ export default function App() {
           )}
         </div>
 
-        {/* 右側：会計内容 */}
+        {/* 右側：会計内容（右端見切れ防止） */}
         <div style={{
-          flex: '1 1 340px',
+          flex: '1 1 360px',
           backgroundColor: t.cartBg,
           color: t.cartText,
           padding: '18px 20px',
@@ -997,13 +1041,13 @@ export default function App() {
             </div>
 
             {/* カート明細リスト */}
-            <div style={{ flex: 1, maxHeight: '220px', overflowY: 'auto', marginBottom: '12px', paddingRight: '4px' }}>
+            <div style={{ flex: 1, maxHeight: '280px', overflowY: 'auto', marginBottom: '12px', paddingRight: '4px' }}>
               {cart.length === 0 && appliedTickets.length === 0 ? (
                 <div style={{ color: t.cartText, fontSize: '16px', textAlign: 'left', opacity: 0.8 }}>商品または回数券を選択してください</div>
               ) : (
                 <>
                   {cart.map((c) => (
-                    <div key={c.item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', marginBottom: '8px', backgroundColor: t.cartItemBg, padding: '6px 10px', borderRadius: '6px', textAlign: 'left' }}>
+                    <div key={c.item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', marginBottom: '8px', backgroundColor: t.cartItemBg, padding: '8px 12px', borderRadius: '6px', textAlign: 'left' }}>
                       <div style={{ flex: 1, minWidth: 0, paddingRight: '6px', textAlign: 'left' }}>
                         <div style={{ fontWeight: 'bold', color: t.cartText, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>{c.item.name}</div>
                         <div style={{ fontSize: '13px', color: t.cartText, opacity: 0.8, textAlign: 'left' }}>¥{(c.item.price * c.quantity).toLocaleString()}</div>
@@ -1012,20 +1056,20 @@ export default function App() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                         <button
                           onClick={() => updateCartQuantity(c.item.id, -1)}
-                          style={{ backgroundColor: 'rgba(0,0,0,0.15)', color: t.cartText, border: '1px solid rgba(128,128,128,0.3)', borderRadius: '4px', width: '26px', height: '26px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          style={{ backgroundColor: 'rgba(0,0,0,0.15)', color: t.cartText, border: '1px solid rgba(128,128,128,0.3)', borderRadius: '4px', width: '28px', height: '28px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           -
                         </button>
                         <span style={{ fontSize: '15px', fontWeight: 'bold', color: t.cartText, minWidth: '18px', textAlign: 'center' }}>{c.quantity}</span>
                         <button
                           onClick={() => updateCartQuantity(c.item.id, 1)}
-                          style={{ backgroundColor: 'rgba(0,0,0,0.15)', color: t.cartText, border: '1px solid rgba(128,128,128,0.3)', borderRadius: '4px', width: '26px', height: '26px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          style={{ backgroundColor: 'rgba(0,0,0,0.15)', color: t.cartText, border: '1px solid rgba(128,128,128,0.3)', borderRadius: '4px', width: '28px', height: '28px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           +
                         </button>
                         <button
                           onClick={() => removeCartItem(c.item.id)}
-                          style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', width: '26px', height: '26px', fontSize: '12px', cursor: 'pointer', marginLeft: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                          style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', width: '28px', height: '28px', fontSize: '12px', cursor: 'pointer', marginLeft: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
                           title="削除"
                         >
                           ✕
@@ -1035,7 +1079,7 @@ export default function App() {
                   ))}
 
                   {appliedTickets.map((tItem) => (
-                    <div key={tItem.ticket.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', marginBottom: '8px', backgroundColor: t.ticketBg, padding: '6px 10px', borderRadius: '6px', textAlign: 'left', border: `1px solid ${t.ticketBorder}` }}>
+                    <div key={tItem.ticket.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', marginBottom: '8px', backgroundColor: t.ticketBg, padding: '8px 12px', borderRadius: '6px', textAlign: 'left', border: `1px solid ${t.ticketBorder}` }}>
                       <div style={{ flex: 1, minWidth: 0, paddingRight: '6px', textAlign: 'left' }}>
                         <div style={{ fontWeight: 'bold', color: t.ticketText, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', textAlign: 'left' }}>【回数券】{tItem.ticket.name}</div>
                         <div style={{ fontSize: '13px', color: t.ticketAmount, textAlign: 'left' }}>-¥{(tItem.ticket.amount * tItem.quantity).toLocaleString()}</div>
@@ -1044,20 +1088,20 @@ export default function App() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                         <button
                           onClick={() => updateTicketQuantity(tItem.ticket.id, -1)}
-                          style={{ backgroundColor: '#10b981', color: '#ffffff', border: 'none', borderRadius: '4px', width: '26px', height: '26px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          style={{ backgroundColor: '#10b981', color: '#ffffff', border: 'none', borderRadius: '4px', width: '28px', height: '28px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           -
                         </button>
                         <span style={{ fontSize: '15px', fontWeight: 'bold', color: t.ticketText, minWidth: '18px', textAlign: 'center' }}>{tItem.quantity}</span>
                         <button
                           onClick={() => updateTicketQuantity(tItem.ticket.id, 1)}
-                          style={{ backgroundColor: '#10b981', color: '#ffffff', border: 'none', borderRadius: '4px', width: '26px', height: '26px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          style={{ backgroundColor: '#10b981', color: '#ffffff', border: 'none', borderRadius: '4px', width: '28px', height: '28px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           +
                         </button>
                         <button
                           onClick={() => removeTicketItem(tItem.ticket.id)}
-                          style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', width: '26px', height: '26px', fontSize: '12px', cursor: 'pointer', marginLeft: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                          style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', width: '28px', height: '28px', fontSize: '12px', cursor: 'pointer', marginLeft: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
                           title="削除"
                         >
                           ✕
@@ -1107,7 +1151,7 @@ export default function App() {
                   color: t.quickBtnText,
                   border: 'none',
                   borderRadius: '6px',
-                  padding: '6px 0px',
+                  padding: '8px 0px',
                   fontSize: '11px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -1123,7 +1167,7 @@ export default function App() {
                   color: t.quickBtnText,
                   border: 'none',
                   borderRadius: '6px',
-                  padding: '6px 0px',
+                  padding: '8px 0px',
                   fontSize: '11px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -1139,7 +1183,7 @@ export default function App() {
                   color: t.quickBtnText,
                   border: 'none',
                   borderRadius: '6px',
-                  padding: '6px 0px',
+                  padding: '8px 0px',
                   fontSize: '11px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -1155,7 +1199,7 @@ export default function App() {
                   color: t.quickBtnText,
                   border: 'none',
                   borderRadius: '6px',
-                  padding: '6px 0px',
+                  padding: '8px 0px',
                   fontSize: '11px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -1171,7 +1215,7 @@ export default function App() {
                   color: t.quickBtnText,
                   border: 'none',
                   borderRadius: '6px',
-                  padding: '6px 0px',
+                  padding: '8px 0px',
                   fontSize: '11px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -1240,11 +1284,11 @@ export default function App() {
                   onClick={handleCheckoutStep1}
                   disabled={(cart.length === 0 && totalAmount === 0) || numericReceived < totalAmount}
                   style={{
-                    flex: '1 1 140px',
-                    padding: '12px 8px',
+                    flex: '1 1 130px',
+                    padding: '12px 6px',
                     backgroundColor: (cart.length > 0 || totalAmount === 0) && numericReceived >= totalAmount ? '#16a34a' : 'rgba(0,0,0,0.15)',
                     color: '#ffffff',
-                    fontSize: '16px',
+                    fontSize: '15px',
                     fontWeight: 'bold',
                     border: 'none',
                     borderRadius: '8px',
@@ -1258,8 +1302,8 @@ export default function App() {
                   onClick={handleSendToSpreadsheet}
                   disabled={isSubmitting || (cart.length === 0 && appliedTickets.length === 0)}
                   style={{
-                    flex: '1 1 140px',
-                    padding: '12px 8px',
+                    flex: '1 1 130px',
+                    padding: '12px 6px',
                     backgroundColor: isSubmitting ? '#9ca3af' : (cart.length > 0 || appliedTickets.length > 0) ? '#2563eb' : 'rgba(0,0,0,0.15)',
                     color: '#ffffff',
                     fontSize: '15px',
@@ -1546,7 +1590,7 @@ export default function App() {
                       onClick={() => setExpandModalType('products')}
                       style={{ backgroundColor: t.productBg, color: t.productPrice, border: `1px solid ${t.productBorder}`, borderRadius: '4px', padding: '3px 8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                     >
-                      全表示（大きく編集）
+                      全表示
                     </button>
                   </div>
 
@@ -1598,7 +1642,7 @@ export default function App() {
                         onClick={() => setExpandModalType('tickets')}
                         style={{ backgroundColor: t.ticketBg, color: t.ticketText, border: `1px solid ${t.ticketBorder}`, borderRadius: '4px', padding: '3px 8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
                       >
-                        全表示（大きく編集）
+                        全表示
                       </button>
                     </div>
 
@@ -1776,7 +1820,7 @@ export default function App() {
                       type="text"
                       value={appName}
                       onChange={(e) => setAppName(e.target.value)}
-                      placeholder="例: 簡単会計"
+                      placeholder="例: どこレジ"
                       style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '14px', fontWeight: 'bold', boxSizing: 'border-box', backgroundColor: t.bg, color: t.text }}
                     />
                   </div>
