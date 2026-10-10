@@ -166,7 +166,6 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
   },
 };
 
-// 色の明暗判定
 function getContrastingTextColor(hexColor: string): string {
   const hex = hexColor.replace('#', '');
   const r = parseInt(hex.substring(0, 2), 16) || 0;
@@ -181,7 +180,6 @@ function getContrastingSubTextColor(hexColor: string): string {
   return isLightBg ? '#475569' : '#e2e8f0';
 }
 
-// カスタムテーマ生成関数
 function generateCustomTheme(primary: string, secondary: string, customBg: string, cardBg: string): ThemeConfig {
   const headerText = getContrastingTextColor(primary);
   const cartText = getContrastingTextColor(secondary);
@@ -221,7 +219,6 @@ function generateCustomTheme(primary: string, secondary: string, customBg: strin
   };
 }
 
-// 八角形×羊SVG（isEating: 草食い、isHappy: 喜ぶ笑顔＋キラキラ演出）
 const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false }: { color?: string; isEating?: boolean; isHappy?: boolean }) => (
   <svg
     width="34"
@@ -231,7 +228,6 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
     xmlns="http://www.w3.org/2000/svg"
     style={{ flexShrink: 0, display: 'block' }}
   >
-    {/* 八角形 */}
     <polygon
       points="30,5 70,5 95,30 95,70 70,92 30,92 5,70 5,30"
       stroke={color}
@@ -239,12 +235,8 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       fill="none"
       strokeLinejoin="round"
     />
-
-    {/* 前足 */}
     <path d="M38,91 C38,97 44,97 44,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
     <path d="M56,91 C56,97 62,97 62,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
-
-    {/* 顔輪郭 */}
     <path
       d="M38,40 C32,40 28,46 30,52 C26,56 28,64 34,66 C38,74 62,74 66,66 C72,64 74,56 70,52 C72,46 68,40 62,40 C58,34 42,34 38,40 Z"
       stroke={color}
@@ -253,12 +245,9 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-
-    {/* ぐるぐる角 */}
     <path d="M34,42 C20,32 10,46 18,58 C24,66 34,60 30,50 C28,44 22,46 22,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
     <path d="M66,42 C80,32 90,46 82,58 C76,66 66,60 70,50 C72,44 78,46 78,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
 
-    {/* 目 */}
     {isHappy ? (
       <g>
         <path d="M39,52 Q43,46 47,52" stroke={color} strokeWidth="3" strokeLinecap="round" fill="none" />
@@ -271,14 +260,12 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       </g>
     )}
 
-    {/* 口・鼻ライン */}
     {isHappy ? (
       <path d="M50,56 L50,59 M44,61 C47,67 53,67 56,61" stroke={color} strokeWidth="3" strokeLinecap="round" fill="none" />
     ) : (
       <path d="M50,56 L50,60 M46,63 C48,65 52,65 54,63" stroke={color} strokeWidth="3" strokeLinecap="round" />
     )}
 
-    {/* 草を食べるアニメーションパーツ */}
     {isEating && (
       <g>
         <path d="M52,62 Q62,64 68,58 M52,62 Q66,68 74,66 M52,62 Q60,72 66,74" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" fill="none" />
@@ -288,7 +275,6 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       </g>
     )}
 
-    {/* 喜ぶときのキラキラ星演出 */}
     {isHappy && (
       <g fill="#facc15">
         <path d="M22,22 L24,27 L29,29 L24,31 L22,36 L20,31 L15,29 L20,27 Z" />
@@ -298,9 +284,6 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
   </svg>
 );
 
-// ==========================================
-// 2. Google Apps Script（GAS）URL
-// ==========================================
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwyLOy2SO5X9bvR8SBc_uPy1ICbw6D3u_ABkQYRHAEJgNMK3LeNl7EAsvassfClx26CQA/exec';
 const CONTACT_GAS_URL = 'https://script.google.com/macros/s/AKfycby-K4JPPfPLIFzO0wJmv53JV-7G6uSKUaWQEQlVFpNem7ZuucK8Q88464cOc8QyGPMwaw/exec';
 
@@ -322,9 +305,6 @@ const SAMPLE_GAS_CODE = `function doPost(e) {
   return ContentService.createTextOutput("Success");
 }`;
 
-// ==========================================
-// 3. デフォルトの商品・回数券リスト
-// ==========================================
 const DEFAULT_PRODUCTS: Item[] = [
   { id: '1', name: '大人 A', price: 1100 },
   { id: '2', name: '大人 B', price: 1000 },
@@ -344,7 +324,6 @@ const DEFAULT_TICKETS: Ticket[] = [
 ];
 
 export default function App() {
-  // アプリ設定（初期タイトルを「POSheep」に変更）
   const [appName, setAppName] = useState<string>(() => {
     return localStorage.getItem('pos_app_name') || 'POSheep';
   });
@@ -453,6 +432,19 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   
   const [isDesktop, setIsDesktop] = useState<boolean>(window.innerWidth >= 768);
+
+  // 💰 Google AdSense 収益化スクリプトの動的挿入処理
+  useEffect(() => {
+    const scriptId = 'google-adsense-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.async = true;
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9422966920165721';
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+    }
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
@@ -2292,7 +2284,7 @@ export default function App() {
             {/* TAB 4: 📖 使い方 */}
             {activeTab === 'guide' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>📖 レジの使い方ガイド</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>📖 レジの使い方ガイド</h3>
 
                 <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
                   <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>1. 商品・回数券の選択</div>
