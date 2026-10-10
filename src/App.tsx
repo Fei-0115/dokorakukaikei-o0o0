@@ -454,10 +454,10 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // スマホサイズ用に年表示を省いた日付フォーマット
   const formattedDate = currentTime.toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    month: 'numeric',
+    day: 'numeric',
     weekday: 'short',
   });
   const formattedTime = currentTime.toLocaleTimeString('ja-JP', {
@@ -800,49 +800,53 @@ export default function App() {
       transition: 'background-color 0.3s ease',
     }}>
       
-      {/* 1. ヘッダー（スクロール時最上部固定） */}
+      {/* 1. ヘッダー（スマホサイズでも必ず1行に収まるコンパクト設計） */}
       <div style={{
         position: 'sticky',
         top: 0,
         zIndex: 100,
         backgroundColor: t.headerBg,
-        padding: '10px 20px',
+        padding: '10px 14px',
         borderRadius: '8px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
         display: 'flex',
-        flexWrap: 'wrap',
+        flexWrap: 'nowrap', // 折り返しを強制無効化
         alignItems: 'center',
+        justifyContent: 'space-between',
         width: '100%',
         boxSizing: 'border-box',
-        gap: '12px',
+        gap: '8px',
         flexShrink: 0
       }}>
-        <button
-          onClick={() => setIsMenuOpen(true)}
-          title="設定メニューを開く"
-          style={{
-            backgroundColor: 'transparent',
-            border: 'none',
-            fontSize: '24px',
-            cursor: 'pointer',
-            padding: '4px 8px',
-            borderRadius: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: t.headerText,
-          }}
-        >
-          ☰
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            title="設定メニューを開く"
+            style={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              fontSize: '22px',
+              cursor: 'pointer',
+              padding: '2px 4px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: t.headerText,
+              flexShrink: 0
+            }}
+          >
+            ☰
+          </button>
 
-        <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: t.headerText }}>
-          {appName}
-        </h1>
+          <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: t.headerText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {appName}
+          </h1>
+        </div>
         
-        <div style={{ fontSize: '15px', fontWeight: 'bold', color: t.headerTimeColor, display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto' }}>
+        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.headerTimeColor, display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
           <span>{formattedDate}</span>
-          <span style={{ fontSize: '18px', fontFamily: 'monospace' }}>{formattedTime}</span>
+          <span style={{ fontSize: '15px', fontFamily: 'monospace' }}>{formattedTime}</span>
         </div>
       </div>
 
@@ -1178,7 +1182,7 @@ export default function App() {
               </button>
             </div>
 
-            {/* お預かり入力欄（「お預かり(現金)」から修正） */}
+            {/* お預かり入力欄 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <span style={{ fontSize: '18px', color: t.cartText }}>お預かり:</span>
               <input
@@ -1762,11 +1766,9 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 3: アプリ設定（会員番号・回数券ON/OFF追加） */}
+            {/* TAB 3: アプリ設定 */}
             {activeTab === 'settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '20px', textAlign: 'left' }}>
-                
-                {/* 表示名設定 */}
                 <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div>
                     <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>アプリ名の変更</h3>
@@ -1802,7 +1804,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 会員番号入力 ON / OFF */}
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>会員番号入力機能</h3>
                   <p style={{ fontSize: '12px', color: t.subText, marginBottom: '10px', textAlign: 'left' }}>メイン画面の「会員番号」入力欄を表示するか設定します。</p>
@@ -1843,7 +1844,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 回数券エリア ON / OFF */}
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>回数券エリア機能</h3>
                   <p style={{ fontSize: '12px', color: t.subText, marginBottom: '10px', textAlign: 'left' }}>メイン画面の「回数券」選択エリアを表示するか設定します。</p>
@@ -1884,7 +1884,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 消費税設定 */}
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>消費税設定</h3>
                   <p style={{ fontSize: '12px', color: t.subText, marginBottom: '12px', textAlign: 'left' }}>お会計に消費税を自動加算するか設定します。</p>
@@ -1938,7 +1937,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* スプレッドシート連携設定 */}
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left' }}>📊 レジ用スプレッドシート連携</h3>
@@ -2056,7 +2054,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* 全体データのリセット */}
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#dc2626', marginBottom: '6px', textAlign: 'left' }}>全体データのリセット</h3>
                   <p style={{ fontSize: '12px', color: t.subText, marginBottom: '10px', textAlign: 'left' }}>商品・連携URL・消費税・アプリ名等すべての設定を初期化します。</p>
