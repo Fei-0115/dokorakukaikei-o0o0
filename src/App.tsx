@@ -329,7 +329,6 @@ const DEFAULT_TICKETS: Ticket[] = [
 ];
 
 export default function App() {
-  // アプリ設定（初期名を「どこレジ」に変更）
   const [appName, setAppName] = useState<string>(() => {
     return localStorage.getItem('pos_app_name') || 'どこレジ';
   });
@@ -433,6 +432,22 @@ export default function App() {
   const [memberNumber, setMemberNumber] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  // Vite/CSSのルート中央寄せ・幅制限を画面全幅にリセット
+  useEffect(() => {
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+    document.body.style.maxWidth = 'none';
+    document.body.style.width = '100%';
+
+    const rootEl = document.getElementById('root');
+    if (rootEl) {
+      rootEl.style.margin = '0';
+      rootEl.style.padding = '0';
+      rootEl.style.maxWidth = 'none';
+      rootEl.style.width = '100%';
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('pos_app_name', appName);
@@ -839,10 +854,10 @@ export default function App() {
       gap: '12px',
       boxSizing: 'border-box',
       transition: 'background-color 0.3s ease',
-      overflowX: 'hidden'
+      margin: 0,
     }}>
       
-      {/* 1. ヘッダー（中央寄りずれ防止＆左右フィット） */}
+      {/* 1. ヘッダー */}
       <div style={{
         position: 'sticky',
         top: 0,
@@ -894,12 +909,12 @@ export default function App() {
         </div>
       </div>
 
-      {/* メインエリア（右寄り防止・レスポンシブ整列） */}
+      {/* メインエリア（端から端まで100%拡張） */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', width: '100%', flex: 1, boxSizing: 'border-box' }}>
         
         {/* 左側：商品・回数券選択 */}
         <div style={{
-          flex: '1 1 500px',
+          flex: '1 1 55%',
           backgroundColor: t.cardBg,
           padding: '16px',
           borderRadius: '12px',
@@ -1018,9 +1033,9 @@ export default function App() {
           )}
         </div>
 
-        {/* 右側：会計内容（右端見切れ防止） */}
+        {/* 右側：会計内容 */}
         <div style={{
-          flex: '1 1 360px',
+          flex: '1 1 350px',
           backgroundColor: t.cartBg,
           color: t.cartText,
           padding: '18px 20px',
@@ -1152,7 +1167,7 @@ export default function App() {
                   border: 'none',
                   borderRadius: '6px',
                   padding: '8px 0px',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   textAlign: 'center'
@@ -1168,7 +1183,7 @@ export default function App() {
                   border: 'none',
                   borderRadius: '6px',
                   padding: '8px 0px',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   textAlign: 'center'
@@ -1184,7 +1199,7 @@ export default function App() {
                   border: 'none',
                   borderRadius: '6px',
                   padding: '8px 0px',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   textAlign: 'center'
@@ -1200,7 +1215,7 @@ export default function App() {
                   border: 'none',
                   borderRadius: '6px',
                   padding: '8px 0px',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   textAlign: 'center'
@@ -1216,7 +1231,7 @@ export default function App() {
                   border: 'none',
                   borderRadius: '6px',
                   padding: '8px 0px',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   textAlign: 'center'
@@ -1284,7 +1299,7 @@ export default function App() {
                   onClick={handleCheckoutStep1}
                   disabled={(cart.length === 0 && totalAmount === 0) || numericReceived < totalAmount}
                   style={{
-                    flex: '1 1 130px',
+                    flex: '1 1 120px',
                     padding: '12px 6px',
                     backgroundColor: (cart.length > 0 || totalAmount === 0) && numericReceived >= totalAmount ? '#16a34a' : 'rgba(0,0,0,0.15)',
                     color: '#ffffff',
@@ -1302,7 +1317,7 @@ export default function App() {
                   onClick={handleSendToSpreadsheet}
                   disabled={isSubmitting || (cart.length === 0 && appliedTickets.length === 0)}
                   style={{
-                    flex: '1 1 130px',
+                    flex: '1 1 120px',
                     padding: '12px 6px',
                     backgroundColor: isSubmitting ? '#9ca3af' : (cart.length > 0 || appliedTickets.length > 0) ? '#2563eb' : 'rgba(0,0,0,0.15)',
                     color: '#ffffff',
