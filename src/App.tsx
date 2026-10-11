@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 
 // ==========================================
 // 1. データ型 ＆ テーマの定義
@@ -133,9 +134,6 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
   },
 };
 
-// ==========================================
-// 2. お知らせデータの管理用リスト
-// ==========================================
 const NEWS_LIST: NewsItem[] = [
   {
     id: 'news-1',
@@ -143,15 +141,16 @@ const NEWS_LIST: NewsItem[] = [
     date: '2026/10/11',
     summary: 'Web POSレジアプリ「POSheep（ポシップ）」のテスト版をオープンいたしました。主な新機能や今後の展開についてご覧いただけます。',
     content: [
-      'POSheepをご利用いただき誠にありがとうございます。',
-      'このたび、個人イベントで気軽に利用できるWeb POSレジアプリ「POSheep（ポシップ）」のテスト版（v1.0.0-beta）をリリースいたしました！',
+      'いつもPOSheepをご利用いただき誠にありがとうございます。',
+      'このたび、店舗・イベント出店者向けWeb POSレジアプリ「POSheep（ポシップ）」のテスト版（v1.0.0-beta）を公式リリースいたしました！',
       '■ 主な実装機能のご案内：',
       '・【会計計算＆クイック入力】手軽に商品を登録し、お釣り計算やクイック現金入力に対応。',
       '・【スプレッドシートリアルタイム連携】Google Apps Script（GAS）を利用した売上データの全自動スプレッドシート記録。',
-      '・【会計履歴の確認＆修正】不正防止の観点から打ち消し線（二重線）付きで修正内容を見やすく修正履歴保存が可能、未送信データのまとめ一括送信機能。',
+      '・【会計履歴の確認＆修正】過誤対応として打ち消し線（二重線）付きでの修正履歴保存。未送信データのまとめ一括送信機能。',
       '・【スマートカスタムテーマ】メインカラーとアクセントカラーを選ぶだけで自動でおしゃれなテーマを作成。',
-      '・【デザイン】PCからスマホまで、全画面吸着フィットUIや可愛い羊アニメーション演出。',
+      '・【デザイン刷新】PCからスマホまで、全画面吸着フィットUIや可愛い羊アニメーション演出。',
       '■ 今後のアップデート予定：',
+      '皆様からのご意見を元に、売上グラフ集計画面や商品カテゴリー分け機能などの追加を予定しております。',
       'ご不具合のご報告や「こんな機能が欲しい」といったご要望は、メニューの「お問い合わせ」タブよりお気軽にお寄せください。'
     ]
   }
@@ -223,7 +222,7 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
     <path d="M38,91 C38,97 44,97 44,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
     <path d="M56,91 C56,97 62,97 62,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
     <path
-      d="M38,40 C32,40 28,46 30,52 C26,56 28,64 34,66 C38,74 62,74 66,66 C72,64 74,56 70,52 C72,46 68,40 62,40 C58,34 42,34 38,40 Z"
+      d="M38,40 C32,40 28,46 30,52 C26,56 28,64 34,66 C72,64 74,56 70,52 C72,46 68,40 62,40 C58,34 42,34 38,40 Z"
       stroke={color}
       strokeWidth="3.5"
       fill="none"
@@ -378,6 +377,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'items' | 'history' | 'guide' | 'settings' | 'theme' | 'faq' | 'contact' | 'news'>('items');
 
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+
+  const [showAboutModal, setShowAboutModal] = useState<boolean>(false);
 
   const [showGuidePopup, setShowGuidePopup] = useState<boolean>(true);
 
@@ -943,10 +944,14 @@ export default function App() {
     setShowSuccessModal(true);
   };
 
-  // ★「お知らせ一覧に戻る」処理の修正関数
   const handleBackToNewsList = () => {
     setSelectedNews(null);
     setActiveTab('news');
+    setIsMenuOpen(true);
+  };
+
+  const openDrawerTab = (tabName: 'guide' | 'faq' | 'contact') => {
+    setActiveTab(tabName);
     setIsMenuOpen(true);
   };
 
@@ -1061,7 +1066,7 @@ export default function App() {
       minHeight: '100vh',
       fontFamily: 'sans-serif',
       backgroundColor: t.bg,
-      padding: '0 0 12px 0',
+      padding: '0 0 0 0',
       gap: '12px',
       boxSizing: 'border-box',
       transition: 'background-color 0.3s ease',
@@ -1123,8 +1128,17 @@ export default function App() {
         </div>
       </div>
 
-      {/* メインエリア */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', width: '100%', flex: 1, boxSizing: 'border-box', padding: '0 16px' }}>
+      {/* メイン会計エリア（使いやすさ重視で十分な高さをしっかり確保） */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '16px',
+        width: '100%',
+        minHeight: 'calc(100vh - 120px)', // パソコン・タブレット等で画面いっぱいに縦幅を広げる
+        boxSizing: 'border-box',
+        padding: '0 16px',
+        alignItems: 'stretch'
+      }}>
         
         {/* 左側：商品・回数券選択 */}
         <div style={{
@@ -1291,8 +1305,8 @@ export default function App() {
               )}
             </div>
 
-            {/* カート明細リスト */}
-            <div style={{ flex: 1, maxHeight: '280px', overflowY: 'auto', marginBottom: '12px', paddingRight: '4px' }}>
+            {/* カート明細リスト（画面縦幅に合わせて広がる） */}
+            <div style={{ flex: 1, minHeight: '180px', maxHeight: '420px', overflowY: 'auto', marginBottom: '12px', paddingRight: '4px' }}>
               {cart.length === 0 && appliedTickets.length === 0 ? (
                 <div style={{ color: t.cartText, fontSize: '16px', textAlign: 'left', opacity: 0.8 }}>商品または回数券を選択してください</div>
               ) : (
@@ -1573,6 +1587,176 @@ export default function App() {
         </div>
       </div>
 
+      {/* メイン画面最下部：スクロールで表示されるフッターエリア */}
+      <footer style={{
+        marginTop: '20px',
+        padding: '20px',
+        borderTop: `1px solid ${t.border}`,
+        backgroundColor: t.cardBg,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '12px',
+        boxSizing: 'border-box',
+        width: '100%',
+        flexShrink: 0
+      }}>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: '8px',
+          maxWidth: '800px',
+          width: '100%'
+        }}>
+          <button
+            onClick={() => setShowAboutModal(true)}
+            style={{
+              backgroundColor: t.productBg,
+              color: t.productPrice,
+              border: `1px solid ${t.productBorder}`,
+              borderRadius: '6px',
+              padding: '8px 14px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            🐑 サイトのご紹介
+          </button>
+          <button
+            onClick={() => openDrawerTab('faq')}
+            style={{
+              backgroundColor: t.bg,
+              color: t.text,
+              border: `1px solid ${t.border}`,
+              borderRadius: '6px',
+              padding: '8px 14px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            🔒 プライバシーポリシー
+          </button>
+          <button
+            onClick={() => openDrawerTab('faq')}
+            style={{
+              backgroundColor: t.bg,
+              color: t.text,
+              border: `1px solid ${t.border}`,
+              borderRadius: '6px',
+              padding: '8px 14px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            ❓ FAQ
+          </button>
+          <button
+            onClick={() => openDrawerTab('contact')}
+            style={{
+              backgroundColor: t.bg,
+              color: t.text,
+              border: `1px solid ${t.border}`,
+              borderRadius: '6px',
+              padding: '8px 14px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            ✉️ お問い合わせ
+          </button>
+        </div>
+        <div style={{ fontSize: '11px', color: t.subText }}>
+          © POSheep - Web POS Application
+        </div>
+      </footer>
+
+      {/* 「サイトのご紹介」中央モーダル（作成経緯を削除しシンプル化） */}
+      {showAboutModal && (
+        <div
+          onClick={() => setShowAboutModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            zIndex: 2500,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '16px',
+            boxSizing: 'border-box'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: t.cardBg,
+              color: t.text,
+              borderRadius: '16px',
+              padding: '24px',
+              maxWidth: '520px',
+              width: '100%',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)',
+              border: `1px solid ${t.border}`,
+              textAlign: 'left',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <OctagonSheepLogo color={t.productPrice} />
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: t.text }}>POSheep（ポシップ）のご紹介</h2>
+              </div>
+              <button onClick={() => setShowAboutModal(false)} style={{ border: 'none', backgroundColor: 'transparent', fontSize: '22px', cursor: 'pointer', color: t.subText }}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.7', color: t.text }}>
+              <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '14px' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: t.productPrice, marginBottom: '6px' }}>🐑 どんなアプリ？</div>
+                <b>POSheep（ポシップ）</b>は、小規模店舗・POP UPショップ・フリマ・イベント出店者様向けに開発された、ブラウザでスグに使える<b>完全無料の軽量Web POSレジアプリ</b>です。専用機器の購入は一切不要で、スマホ・タブレット・パソコンからアクセスするだけで即座にレジ業務を起動できます。
+              </div>
+
+              <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '14px' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: t.productPrice, marginBottom: '6px' }}>✨ 主な機能・こだわり</div>
+                <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <li><b>即座に使える</b>: 会員番号や回数券割引、内税・外税設定を柔軟にカスタマイズ。</li>
+                  <li><b>スプレッドシート全自動連携</b>: Apps Script（GAS）で売上データを一瞬で記録。</li>
+                  <li><b>安心の履歴保存</b>: レジ締め時のミスをなくす打ち消し線付き修正機能 ＆ 一括送信。</li>
+                  <li><b>自由なデザイン</b>: 2色を選ぶだけで自分好みの配色が完成するスマートカラーテーマ。</li>
+                </ul>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowAboutModal(false)}
+              style={{
+                marginTop: '20px',
+                width: '100%',
+                padding: '12px',
+                backgroundColor: t.productPrice,
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 4. サイト訪問時の右下使い方ガイドポップアップ */}
       {showGuidePopup && (
         <div style={{
@@ -1602,8 +1786,7 @@ export default function App() {
           </div>
           <button
             onClick={() => {
-              setActiveTab('guide');
-              setIsMenuOpen(true);
+              setShowAboutModal(true);
               setShowGuidePopup(false);
             }}
             style={{
@@ -1618,7 +1801,7 @@ export default function App() {
               whiteSpace: 'nowrap'
             }}
           >
-            使い方を見る 📖
+            サイトのご紹介 🐑
           </button>
           <button
             onClick={() => setShowGuidePopup(false)}
@@ -1945,7 +2128,7 @@ export default function App() {
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                       <button onClick={() => handleMoveProduct(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
                       <button onClick={() => handleMoveProduct(index, 'down')} disabled={index === products.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === products.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
-                      <button onClick={() => handleDeleteProduct(p.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
+                      <button onClick={() => handleDeleteProduct(p.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
                     </div>
                   </div>
                 ))
@@ -1957,7 +2140,7 @@ export default function App() {
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                       <button onClick={() => handleMoveTicket(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
                       <button onClick={() => handleMoveTicket(index, 'down')} disabled={index === tickets.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === tickets.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
-                      <button onClick={() => handleDeleteTicket(tItem.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
+                      <button onClick={() => handleDeleteTicket(tItem.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
                     </div>
                   </div>
                 ))
@@ -2102,7 +2285,7 @@ export default function App() {
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  ❓ FAQ
+                  ❓ FAQ・規約
                 </button>
                 <button
                   onClick={() => setActiveTab('contact')}
@@ -2652,7 +2835,7 @@ export default function App() {
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#dc2626', marginBottom: '6px', textAlign: 'left' }}>⚠️ 全体データのリセット</h3>
                   <p style={{ fontSize: '12px', color: t.subText, marginBottom: '10px', textAlign: 'left' }}>商品・連携URL・消費税・アプリ名等すべての設定を初期化します。</p>
-                  
+
                   <button
                     onClick={handleResetAllSettings}
                     style={{
@@ -2801,7 +2984,7 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 6: ❓ FAQ ＆ プライバシーポリシー */}
+            {/* TAB 6: ❓ FAQ ＆ 免責事項・注意事項・プライバシーポリシー */}
             {activeTab === 'faq' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
                 <div>
@@ -2821,6 +3004,25 @@ export default function App() {
                     <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '10px 12px' }}>
                       <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '13px', marginBottom: '2px' }}>Q. シートにデータが記録されません。</div>
                       <div style={{ color: t.subText, fontSize: '12px' }}>A. 「アプリ設定」タブでスプレッドシート連携が「ON」になっており、GASのウェブアプリURLが正しく設定されているかご確認ください。</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 免責事項・注意事項エリア */}
+                <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '14px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: '0 0 8px 0', textAlign: 'left' }}>⚠️ 免責事項・注意事項</h3>
+                  <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px', fontSize: '12px', color: t.text, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: '#dc2626', marginBottom: '2px' }}>【免責事項】</div>
+                      本アプリの利用により生じたデータの消失・損失・不一致等の一切の損害について、開発者は責任を負いません。
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: t.drawerText, marginBottom: '2px' }}>【データ保存についての注意】</div>
+                      本アプリはブラウザの `localStorage` を使用しています。シークレットモードやキャッシュ削除で履歴が消える点にご注意ください。
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: t.drawerText, marginBottom: '2px' }}>【GAS連携についての注意】</div>
+                      GAS連携はGoogleアカウントの利用制限を受ける場合があります。重要な会計は念のため手元でもメモを推奨します。
                     </div>
                   </div>
                 </div>
@@ -2956,6 +3158,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Vercel Analytics コンポーネント */}
+      <Analytics />
 
     </div>
   );
