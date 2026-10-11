@@ -1266,9 +1266,6 @@ export default function App() {
             {/* 商品選択ヘッダー */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: t.text, textAlign: 'left', margin: 0 }}>{productSectionTitle}</h2>
-              {isEditMode && (
-                <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>※長押し/ドラッグで順序変更・直接編集可能</span>
-              )}
             </div>
 
             {/* 商品ボタンリスト（ドラッグ＆ドロップ並び替え・新規追加・直接削除対応） */}
@@ -1383,9 +1380,6 @@ export default function App() {
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderTop: `1px solid ${t.border}`, paddingTop: '12px' }}>
                   <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: t.text, textAlign: 'left', margin: 0 }}>{ticketSectionTitle}</h2>
-                  {isEditMode && (
-                    <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>※長押し/ドラッグで順序変更・直接編集可能</span>
-                  )}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', marginBottom: '12px' }}>
