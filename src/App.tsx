@@ -136,21 +136,20 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
 
 const NEWS_LIST: NewsItem[] = [
   {
-    id: 'news-1',
+   id: 'news-1',
     title: '🚀 POSheep テスト版リリースのお知らせ (v1.0.0-beta)',
     date: '2026/10/11',
     summary: 'Web POSレジアプリ「POSheep（ポシップ）」のテスト版をオープンいたしました。主な新機能や今後の展開についてご覧いただけます。',
     content: [
-      'いつもPOSheepをご利用いただき誠にありがとうございます。',
-      'このたび、店舗・イベント出店者向けWeb POSレジアプリ「POSheep（ポシップ）」のテスト版（v1.0.0-beta）を公式リリースいたしました！',
+      'POSheepをご利用いただき誠にありがとうございます。',
+      'このたび、個人イベントで気軽に利用できるWeb POSレジアプリ「POSheep（ポシップ）」のテスト版（v1.0.0-beta）をリリースいたしました！',
       '■ 主な実装機能のご案内：',
       '・【会計計算＆クイック入力】手軽に商品を登録し、お釣り計算やクイック現金入力に対応。',
       '・【スプレッドシートリアルタイム連携】Google Apps Script（GAS）を利用した売上データの全自動スプレッドシート記録。',
-      '・【会計履歴の確認＆修正】過誤対応として打ち消し線（二重線）付きでの修正履歴保存。未送信データのまとめ一括送信機能。',
+      '・【会計履歴の確認＆修正】不正防止の観点から打ち消し線（二重線）付きで修正内容を見やすく修正履歴保存が可能、未送信データのまとめ一括送信機能。',
       '・【スマートカスタムテーマ】メインカラーとアクセントカラーを選ぶだけで自動でおしゃれなテーマを作成。',
-      '・【デザイン刷新】PCからスマホまで、全画面吸着フィットUIや可愛い羊アニメーション演出。',
+      '・【デザイン】PCからスマホまで、全画面吸着フィットUIや可愛い羊アニメーション演出。',
       '■ 今後のアップデート予定：',
-      '皆様からのご意見を元に、売上グラフ集計画面や商品カテゴリー分け機能などの追加を予定しております。',
       'ご不具合のご報告や「こんな機能が欲しい」といったご要望は、メニューの「お問い合わせ」タブよりお気軽にお寄せください。'
     ]
   }
@@ -374,6 +373,12 @@ export default function App() {
 
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   
+  // メイン画面でのダイレクト編集モード ＆ ドラッグ並び替えステート
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [editingInlineItem, setEditingInlineItem] = useState<{ id: string; name: string; price: number; type: 'product' | 'ticket' } | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragType, setDragType] = useState<'product' | 'ticket' | null>(null);
+
   const [activeTab, setActiveTab] = useState<'items' | 'history' | 'guide' | 'settings' | 'theme' | 'faq' | 'contact' | 'news'>('items');
 
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
@@ -731,6 +736,7 @@ export default function App() {
   const handleCashKeypadClear = () => setReceivedAmount('');
 
   const addToCart = (product: Item) => {
+    if (isEditMode) return;
     setCart((prev) => {
       const existing = prev.find((c) => c.item.id === product.id);
       if (existing) {
@@ -761,6 +767,7 @@ export default function App() {
   };
 
   const applyTicket = (ticket: Ticket) => {
+    if (isEditMode) return;
     setAppliedTickets((prev) => {
       const existing = prev.find((t) => t.ticket.id === ticket.id);
       if (existing) {
@@ -795,6 +802,48 @@ export default function App() {
     setAppliedTickets([]);
     setReceivedAmount('');
     setMemberNumber('');
+  };
+
+  // メイン画面でのダイレクトインライン編集保存
+  const handleSaveInlineEdit = () => {
+    if (!editingInlineItem) return;
+    if (editingInlineItem.type === 'product') {
+      setProducts(prev => prev.map(p => p.id === editingInlineItem.id ? { ...p, name: editingInlineItem.name, price: editingInlineItem.price } : p));
+    } else {
+      setTickets(prev => prev.map(t => t.id === editingInlineItem.id ? { ...t, name: editingInlineItem.name, amount: editingInlineItem.price } : t));
+    }
+    setEditingInlineItem(null);
+  };
+
+  // ドラッグ＆ドロップ並び替えハンドラー
+  const handleDragStart = (index: number, type: 'product' | 'ticket') => {
+    if (!isEditMode) return;
+    setDraggedIndex(index);
+    setDragType(type);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number, type: 'product' | 'ticket') => {
+    if (!isEditMode || draggedIndex === null || dragType !== type) return;
+    e.preventDefault();
+    if (draggedIndex === index) return;
+
+    if (type === 'product') {
+      const updated = [...products];
+      const [moved] = updated.splice(draggedIndex, 1);
+      updated.splice(index, 0, moved);
+      setProducts(updated);
+    } else {
+      const updated = [...tickets];
+      const [moved] = updated.splice(draggedIndex, 1);
+      updated.splice(index, 0, moved);
+      setTickets(updated);
+    }
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragType(null);
   };
 
   const subtotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0);
@@ -1122,19 +1171,43 @@ export default function App() {
           </h1>
         </div>
         
-        <div style={{ fontSize: '14px', fontWeight: 'bold', color: t.headerTimeColor, display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
-          <span>{formattedDate}</span>
-          <span style={{ fontSize: '16px', fontFamily: 'monospace' }}>{formattedTime}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+          {/* メイン画面ダイレクト編集モード切り替えボタン */}
+          <button
+            onClick={() => setIsEditMode(!isEditMode)}
+            style={{
+              backgroundColor: isEditMode ? '#dc2626' : t.productBg,
+              color: isEditMode ? '#ffffff' : t.productPrice,
+              border: `1px solid ${isEditMode ? '#dc2626' : t.productBorder}`,
+              borderRadius: '8px',
+              padding: '6px 12px',
+              fontSize: '13px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              boxShadow: isEditMode ? '0 0 10px rgba(220, 38, 38, 0.4)' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {isEditMode ? '✓ 編集終了' : '✏️ 編集モード'}
+          </button>
+
+          <div style={{ fontSize: '14px', fontWeight: 'bold', color: t.headerTimeColor, display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
+            <span>{formattedDate}</span>
+            <span style={{ fontSize: '16px', fontFamily: 'monospace' }}>{formattedTime}</span>
+          </div>
         </div>
       </div>
 
-      {/* メイン会計エリア（使いやすさ重視で十分な高さをしっかり確保） */}
+      {/* メイン会計エリア（使いやすさ重視で縦幅をしっかり確保） */}
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
         gap: '16px',
         width: '100%',
-        minHeight: 'calc(100vh - 120px)', // パソコン・タブレット等で画面いっぱいに縦幅を広げる
+        minHeight: 'calc(100vh - 120px)',
         boxSizing: 'border-box',
         padding: '0 16px',
         alignItems: 'stretch'
@@ -1190,72 +1263,235 @@ export default function App() {
               </div>
             )}
 
-            {/* 商品選択 */}
-            <h2 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: t.text, textAlign: 'left' }}>{productSectionTitle}</h2>
+            {/* 商品選択ヘッダー */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: t.text, textAlign: 'left', margin: 0 }}>{productSectionTitle}</h2>
+              {isEditMode && (
+                <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>※長押し/ドラッグで順序変更・直接編集可能</span>
+              )}
+            </div>
+
+            {/* 商品ボタンリスト（ドラッグ＆ドロップ並び替え・新規追加・直接削除対応） */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', marginBottom: '16px' }}>
-              {products.map((product) => (
-                <button
+              {products.map((product, index) => (
+                <div
                   key={product.id}
-                  onClick={() => addToCart(product)}
+                  draggable={isEditMode}
+                  onDragStart={() => handleDragStart(index, 'product')}
+                  onDragOver={(e) => handleDragOver(e, index, 'product')}
+                  onDragEnd={handleDragEnd}
+                  onClick={() => {
+                    if (isEditMode) {
+                      setEditingInlineItem({ id: product.id, name: product.name, price: product.price, type: 'product' });
+                    } else {
+                      addToCart(product);
+                    }
+                  }}
                   style={{
                     padding: '12px 10px',
-                    backgroundColor: t.productBg,
-                    border: `1px solid ${t.productBorder}`,
+                    backgroundColor: isEditMode ? '#fffbebf0' : t.productBg,
+                    border: `1px solid ${isEditMode ? '#f59e0b' : t.productBorder}`,
                     borderRadius: '8px',
                     textAlign: 'left',
-                    cursor: 'pointer',
+                    cursor: isEditMode ? 'grab' : 'pointer',
                     boxSizing: 'border-box',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    position: 'relative',
+                    userSelect: 'none',
+                    opacity: draggedIndex === index && dragType === 'product' ? 0.4 : 1
                   }}
                 >
+                  {/* 編集モード時の直接削除ボタン */}
+                  {isEditMode && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteProduct(product.id);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: '4px',
+                        right: '4px',
+                        backgroundColor: '#fee2e2',
+                        color: '#dc2626',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 2
+                      }}
+                      title="削除"
+                    >
+                      ✕
+                    </button>
+                  )}
+
                   <div style={{ 
                     fontWeight: 'bold', 
                     fontSize: '14px', 
                     color: t.productText, 
                     wordBreak: 'break-all', 
                     whiteSpace: 'normal', 
-                    lineHeight: '1.3' 
+                    lineHeight: '1.3',
+                    paddingRight: isEditMode ? '16px' : '0'
                   }}>
                     {product.name}
                   </div>
-                  <div style={{ color: t.productPrice, fontWeight: 'bold', marginTop: '4px', fontSize: '14px' }}>¥{product.price.toLocaleString()}</div>
-                </button>
+                  <div style={{ color: t.productPrice, fontWeight: 'bold', marginTop: '4px', fontSize: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>¥{product.price.toLocaleString()}</span>
+                    {isEditMode && (
+                      <span style={{ fontSize: '10px', backgroundColor: '#f59e0b', color: '#ffffff', borderRadius: '4px', padding: '2px 4px' }}>✏️ 変更</span>
+                    )}
+                  </div>
+                </div>
               ))}
+
+              {/* 編集モード中表示：新規商品追加ボタン */}
+              {isEditMode && (
+                <button
+                  onClick={() => setExpandModalType('products')}
+                  style={{
+                    padding: '12px 10px',
+                    backgroundColor: t.cardBg,
+                    border: `2px dashed ${t.productPrice}`,
+                    borderRadius: '8px',
+                    color: t.productPrice,
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    minHeight: '65px'
+                  }}
+                >
+                  <span>＋ 新規商品追加</span>
+                </button>
+              )}
             </div>
 
             {/* 回数券 */}
             {useTickets && (
               <>
-                <h2 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px', color: t.text, borderTop: `1px solid ${t.border}`, paddingTop: '12px', textAlign: 'left' }}>{ticketSectionTitle}</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderTop: `1px solid ${t.border}`, paddingTop: '12px' }}>
+                  <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: t.text, textAlign: 'left', margin: 0 }}>{ticketSectionTitle}</h2>
+                  {isEditMode && (
+                    <span style={{ fontSize: '12px', color: '#dc2626', fontWeight: 'bold' }}>※長押し/ドラッグで順序変更・直接編集可能</span>
+                  )}
+                </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', marginBottom: '12px' }}>
-                  {tickets.map((ticket) => (
-                    <button
+                  {tickets.map((ticket, index) => (
+                    <div
                       key={ticket.id}
-                      onClick={() => applyTicket(ticket)}
+                      draggable={isEditMode}
+                      onDragStart={() => handleDragStart(index, 'ticket')}
+                      onDragOver={(e) => handleDragOver(e, index, 'ticket')}
+                      onDragEnd={handleDragEnd}
+                      onClick={() => {
+                        if (isEditMode) {
+                          setEditingInlineItem({ id: ticket.id, name: ticket.name, price: ticket.amount, type: 'ticket' });
+                        } else {
+                          applyTicket(ticket);
+                        }
+                      }}
                       style={{
                         padding: '12px 10px',
-                        backgroundColor: t.ticketBg,
-                        border: `1px solid ${t.ticketBorder}`,
+                        backgroundColor: isEditMode ? '#fffbebf0' : t.ticketBg,
+                        border: `1px solid ${isEditMode ? '#f59e0b' : t.ticketBorder}`,
                         borderRadius: '8px',
                         textAlign: 'left',
-                        cursor: 'pointer',
+                        cursor: isEditMode ? 'grab' : 'pointer',
                         boxSizing: 'border-box',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        position: 'relative',
+                        userSelect: 'none',
+                        opacity: draggedIndex === index && dragType === 'ticket' ? 0.4 : 1
                       }}
                     >
+                      {/* 編集モード時の直接削除ボタン */}
+                      {isEditMode && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTicket(ticket.id);
+                          }}
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            backgroundColor: '#fee2e2',
+                            color: '#dc2626',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '20px',
+                            height: '20px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 2
+                          }}
+                          title="削除"
+                        >
+                          ✕
+                        </button>
+                      )}
+
                       <div style={{ 
                         fontWeight: 'bold', 
                         fontSize: '14px', 
                         color: t.ticketText, 
                         wordBreak: 'break-all', 
                         whiteSpace: 'normal', 
-                        lineHeight: '1.3' 
+                        lineHeight: '1.3',
+                        paddingRight: isEditMode ? '16px' : '0'
                       }}>
                         {ticket.name}
                       </div>
-                      <div style={{ color: t.ticketAmount, fontWeight: 'bold', marginTop: '4px', fontSize: '14px' }}>-¥{ticket.amount.toLocaleString()}</div>
-                    </button>
+                      <div style={{ color: t.ticketAmount, fontWeight: 'bold', marginTop: '4px', fontSize: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>-¥{ticket.amount.toLocaleString()}</span>
+                        {isEditMode && (
+                          <span style={{ fontSize: '10px', backgroundColor: '#f59e0b', color: '#ffffff', borderRadius: '4px', padding: '2px 4px' }}>✏️ 変更</span>
+                        )}
+                      </div>
+                    </div>
                   ))}
+
+                  {/* 編集モード中表示：新規回数券追加ボタン */}
+                  {isEditMode && (
+                    <button
+                      onClick={() => setExpandModalType('tickets')}
+                      style={{
+                        padding: '12px 10px',
+                        backgroundColor: t.cardBg,
+                        border: `2px dashed #16a34a`,
+                        borderRadius: '8px',
+                        color: '#16a34a',
+                        fontWeight: 'bold',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        minHeight: '65px'
+                      }}
+                    >
+                      <span>＋ 新規回数券追加</span>
+                    </button>
+                  )}
                 </div>
               </>
             )}
@@ -1283,7 +1519,7 @@ export default function App() {
           )}
         </div>
 
-        {/* 右側：会計内容 */}
+        {/* 右側：会計内容（カート商品個別削除ボタン「✕」搭載） */}
         <div style={{
           flex: '1 1 350px',
           backgroundColor: t.cartBg,
@@ -1305,7 +1541,7 @@ export default function App() {
               )}
             </div>
 
-            {/* カート明細リスト（画面縦幅に合わせて広がる） */}
+            {/* カート明細リスト（個別商品削除ボタン「✕」設置） */}
             <div style={{ flex: 1, minHeight: '180px', maxHeight: '420px', overflowY: 'auto', marginBottom: '12px', paddingRight: '4px' }}>
               {cart.length === 0 && appliedTickets.length === 0 ? (
                 <div style={{ color: t.cartText, fontSize: '16px', textAlign: 'left', opacity: 0.8 }}>商品または回数券を選択してください</div>
@@ -1675,7 +1911,85 @@ export default function App() {
         </div>
       </footer>
 
-      {/* 「サイトのご紹介」中央モーダル（作成経緯を削除しシンプル化） */}
+      {/* メイン画面ダイレクトインライン編集用モーダル */}
+      {editingInlineItem && (
+        <div
+          onClick={() => setEditingInlineItem(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 2600,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '16px'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: t.cardBg,
+              color: t.text,
+              borderRadius: '16px',
+              padding: '20px',
+              width: '100%',
+              maxWidth: '360px',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)',
+              border: `1px solid ${t.border}`,
+              textAlign: 'left'
+            }}
+          >
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 'bold', borderBottom: `1px solid ${t.border}`, paddingBottom: '8px' }}>
+              ✏️ {editingInlineItem.type === 'product' ? productSectionTitle : ticketSectionTitle}の変更
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
+              <div>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>名称</label>
+                <input
+                  type="text"
+                  value={editingInlineItem.name}
+                  onChange={(e) => setEditingInlineItem({ ...editingInlineItem, name: e.target.value })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+                  {editingInlineItem.type === 'product' ? '価格 (円)' : '割引額 (円)'}
+                </label>
+                <input
+                  type="number"
+                  value={editingInlineItem.price}
+                  onChange={(e) => setEditingInlineItem({ ...editingInlineItem, price: Number(e.target.value) })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box', fontWeight: 'bold' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                <button
+                  onClick={() => setEditingInlineItem(null)}
+                  style={{ flex: 1, padding: '10px', backgroundColor: t.bg, color: t.subText, border: `1px solid ${t.border}`, borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleSaveInlineEdit}
+                  style={{ flex: 1, padding: '10px', backgroundColor: t.productPrice, color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  保存する
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 「サイトのご紹介」中央モーダル */}
       {showAboutModal && (
         <div
           onClick={() => setShowAboutModal(false)}
@@ -2128,7 +2442,7 @@ export default function App() {
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                       <button onClick={() => handleMoveProduct(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
                       <button onClick={() => handleMoveProduct(index, 'down')} disabled={index === products.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === products.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
-                      <button onClick={() => handleDeleteProduct(p.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
+                      <button onClick={() => handleDeleteProduct(p.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
                     </div>
                   </div>
                 ))
@@ -2140,7 +2454,7 @@ export default function App() {
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                       <button onClick={() => handleMoveTicket(index, 'up')} disabled={index === 0} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === 0 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▲</button>
                       <button onClick={() => handleMoveTicket(index, 'down')} disabled={index === tickets.length - 1} style={{ border: `1px solid ${t.border}`, backgroundColor: t.cardBg, color: t.text, borderRadius: '4px', padding: '6px 12px', cursor: index === tickets.length - 1 ? 'default' : 'pointer', fontSize: '13px', fontWeight: 'bold' }}>▼</button>
-                      <button onClick={() => handleDeleteTicket(tItem.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 6px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
+                      <button onClick={() => handleDeleteTicket(tItem.id)} style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '6px 10px', fontSize: '13px', cursor: 'pointer', marginLeft: '4px', fontWeight: 'bold' }}>削除</button>
                     </div>
                   </div>
                 ))
