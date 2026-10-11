@@ -15,7 +15,32 @@ type Ticket = {
   amount: number;
 };
 
-type ThemeMode = 'light' | 'dark' | 'vivid' | 'pastel' | 'custom';
+type HistoryRecord = {
+  id: string;
+  dateTime: string;
+  memberNumber: string;
+  cartItems: { name: string; price: number; quantity: number }[];
+  ticketItems: { name: string; amount: number; quantity: number }[];
+  subtotal: number;
+  taxAmount: number;
+  totalAmount: number;
+  receivedAmount: number;
+  changeAmount: number;
+  isEdited?: boolean;
+  editedAt?: string;
+  oldSummary?: string;
+  sentToSheet?: boolean;
+};
+
+type NewsItem = {
+  id: string;
+  title: string;
+  date: string;
+  summary: string;
+  content: string[];
+};
+
+type ThemeMode = 'light' | 'dark' | 'custom';
 
 type ThemeConfig = {
   name: string;
@@ -106,67 +131,32 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
     drawerBg: '#1e293b',
     drawerText: '#f8fafc',
   },
-  vivid: {
-    name: '⚡ ビタミン',
-    bg: '#fff7ed',
-    cardBg: '#ffffff',
-    text: '#7c2d12',
-    subText: '#9a3412',
-    border: '#fed7aa',
-    headerBg: '#ff6b00',
-    headerText: '#ffffff',
-    headerTimeColor: '#ffffff',
-    productBg: '#ffedd5',
-    productBorder: '#fdba74',
-    productText: '#9a3412',
-    productPrice: '#ea580c',
-    ticketBg: '#ecfdf5',
-    ticketBorder: '#6ee7b7',
-    ticketText: '#065f46',
-    ticketAmount: '#059669',
-    cartBg: '#ffecd1',
-    cartText: '#7c2d12',
-    cartItemBg: '#fed7aa',
-    summaryBg: '#fdba74',
-    accentTotal: '#c2410c',
-    accentChange: '#047857',
-    quickBtnBg: '#f97316',
-    quickBtnText: '#ffffff',
-    drawerBg: '#ffffff',
-    drawerText: '#7c2d12',
-  },
-  pastel: {
-    name: '🌸 パステル',
-    bg: '#fff5f7',
-    cardBg: '#ffffff',
-    text: '#831843',
-    subText: '#9d174d',
-    border: '#fbcfe8',
-    headerBg: '#fce7f3',
-    headerText: '#831843',
-    headerTimeColor: '#db2777',
-    productBg: '#fdf2f8',
-    productBorder: '#fbcfe8',
-    productText: '#831843',
-    productPrice: '#db2777',
-    ticketBg: '#f0fdf4',
-    ticketBorder: '#bbf7d0',
-    ticketText: '#166534',
-    ticketAmount: '#16a34a',
-    cartBg: '#fce7f3',
-    cartText: '#831843',
-    cartItemBg: '#fbcfe8',
-    summaryBg: '#fbcfe8',
-    accentTotal: '#be185d',
-    accentChange: '#15803d',
-    quickBtnBg: '#f472b6',
-    quickBtnText: '#ffffff',
-    drawerBg: '#ffffff',
-    drawerText: '#831843',
-  },
 };
 
-// 色の明暗判定
+// ==========================================
+// 2. お知らせデータの管理用リスト
+// ==========================================
+const NEWS_LIST: NewsItem[] = [
+  {
+    id: 'news-1',
+    title: '🚀 POSheep テスト版リリースのお知らせ (v1.0.0-beta)',
+    date: '2026/10/11',
+    summary: 'Web POSレジアプリ「POSheep（ポシップ）」のテスト版をオープンいたしました。主な新機能や今後の展開についてご覧いただけます。',
+    content: [
+      'POSheepをご利用いただき誠にありがとうございます。',
+      'このたび、個人イベントで気軽に利用できるWeb POSレジアプリ「POSheep（ポシップ）」のテスト版（v1.0.0-beta）をリリースいたしました！',
+      '■ 主な実装機能のご案内：',
+      '・【会計計算＆クイック入力】手軽に商品を登録し、お釣り計算やクイック現金入力に対応。',
+      '・【スプレッドシートリアルタイム連携】Google Apps Script（GAS）を利用した売上データの全自動スプレッドシート記録。',
+      '・【会計履歴の確認＆修正】不正防止の観点から打ち消し線（二重線）付きで修正内容を見やすく修正履歴保存が可能、未送信データのまとめ一括送信機能。',
+      '・【スマートカスタムテーマ】メインカラーとアクセントカラーを選ぶだけで自動でおしゃれなテーマを作成。',
+      '・【デザイン】PCからスマホまで、全画面吸着フィットUIや可愛い羊アニメーション演出。',
+      '■ 今後のアップデート予定：',
+      'ご不具合のご報告や「こんな機能が欲しい」といったご要望は、メニューの「お問い合わせ」タブよりお気軽にお寄せください。'
+    ]
+  }
+];
+
 function getContrastingTextColor(hexColor: string): string {
   const hex = hexColor.replace('#', '');
   const r = parseInt(hex.substring(0, 2), 16) || 0;
@@ -176,33 +166,26 @@ function getContrastingTextColor(hexColor: string): string {
   return yiq >= 128 ? '#0f172a' : '#ffffff';
 }
 
-function getContrastingSubTextColor(hexColor: string): string {
-  const isLightBg = getContrastingTextColor(hexColor) === '#0f172a';
-  return isLightBg ? '#475569' : '#e2e8f0';
-}
-
-// カスタムテーマ生成関数
-function generateCustomTheme(primary: string, secondary: string, customBg: string, cardBg: string): ThemeConfig {
+function generateSmartCustomTheme(primary: string, secondary: string, customBgColor?: string): ThemeConfig {
   const headerText = getContrastingTextColor(primary);
   const cartText = getContrastingTextColor(secondary);
-  const cardText = getContrastingTextColor(cardBg);
-  const cardSubText = getContrastingSubTextColor(cardBg);
+  const isSecondaryLight = cartText === '#0f172a';
 
-  const isCartLight = cartText === '#0f172a';
+  const backgroundColor = customBgColor || '#ffffff';
 
   return {
-    name: '🎨 カスタム（オリジナル）',
-    bg: customBg,
-    cardBg: cardBg,
-    text: cardText,
-    subText: cardSubText,
-    border: cardText === '#ffffff' ? 'rgba(255,255,255,0.2)' : '#cbd5e1',
+    name: '🎨 オリジナル',
+    bg: backgroundColor,
+    cardBg: '#ffffff',
+    text: '#1f2937',
+    subText: '#4b5563',
+    border: `${primary}30`,
     headerBg: primary,
     headerText: headerText,
     headerTimeColor: headerText,
-    productBg: `${primary}18`,
-    productBorder: `${primary}50`,
-    productText: cardText,
+    productBg: `${primary}15`,
+    productBorder: `${primary}40`,
+    productText: '#1f2937',
     productPrice: primary,
     ticketBg: '#ecfdf5',
     ticketBorder: '#6ee7b7',
@@ -210,18 +193,17 @@ function generateCustomTheme(primary: string, secondary: string, customBg: strin
     ticketAmount: '#059669',
     cartBg: secondary,
     cartText: cartText,
-    cartItemBg: isCartLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.15)',
-    summaryBg: isCartLight ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.25)',
-    accentTotal: isCartLight ? '#f59e0b' : '#fde047',
-    accentChange: isCartLight ? '#047857' : '#4ade80',
+    cartItemBg: isSecondaryLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.15)',
+    summaryBg: isSecondaryLight ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.25)',
+    accentTotal: isSecondaryLight ? '#d97706' : '#fde047',
+    accentChange: isSecondaryLight ? '#047857' : '#4ade80',
     quickBtnBg: primary,
     quickBtnText: getContrastingTextColor(primary),
-    drawerBg: cardBg,
-    drawerText: cardText,
+    drawerBg: '#ffffff',
+    drawerText: '#1f2937',
   };
 }
 
-// 八角形×羊SVG（isEating: 草食い、isHappy: 喜ぶ笑顔＋キラキラ演出）
 const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false }: { color?: string; isEating?: boolean; isHappy?: boolean }) => (
   <svg
     width="34"
@@ -231,7 +213,6 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
     xmlns="http://www.w3.org/2000/svg"
     style={{ flexShrink: 0, display: 'block' }}
   >
-    {/* 八角形 */}
     <polygon
       points="30,5 70,5 95,30 95,70 70,92 30,92 5,70 5,30"
       stroke={color}
@@ -239,12 +220,8 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       fill="none"
       strokeLinejoin="round"
     />
-
-    {/* 前足 */}
     <path d="M38,91 C38,97 44,97 44,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
     <path d="M56,91 C56,97 62,97 62,91 Z" stroke={color} strokeWidth="3.5" fill={color} />
-
-    {/* 顔輪郭 */}
     <path
       d="M38,40 C32,40 28,46 30,52 C26,56 28,64 34,66 C38,74 62,74 66,66 C72,64 74,56 70,52 C72,46 68,40 62,40 C58,34 42,34 38,40 Z"
       stroke={color}
@@ -253,12 +230,9 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-
-    {/* ぐるぐる角 */}
     <path d="M34,42 C20,32 10,46 18,58 C24,66 34,60 30,50 C28,44 22,46 22,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
     <path d="M66,42 C80,32 90,46 82,58 C76,66 66,60 70,50 C72,44 78,46 78,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
 
-    {/* 目 */}
     {isHappy ? (
       <g>
         <path d="M39,52 Q43,46 47,52" stroke={color} strokeWidth="3" strokeLinecap="round" fill="none" />
@@ -271,14 +245,12 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       </g>
     )}
 
-    {/* 口・鼻ライン */}
     {isHappy ? (
       <path d="M50,56 L50,59 M44,61 C47,67 53,67 56,61" stroke={color} strokeWidth="3" strokeLinecap="round" fill="none" />
     ) : (
       <path d="M50,56 L50,60 M46,63 C48,65 52,65 54,63" stroke={color} strokeWidth="3" strokeLinecap="round" />
     )}
 
-    {/* 草を食べるアニメーションパーツ */}
     {isEating && (
       <g>
         <path d="M52,62 Q62,64 68,58 M52,62 Q66,68 74,66 M52,62 Q60,72 66,74" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" fill="none" />
@@ -288,7 +260,6 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
       </g>
     )}
 
-    {/* 喜ぶときのキラキラ星演出 */}
     {isHappy && (
       <g fill="#facc15">
         <path d="M22,22 L24,27 L29,29 L24,31 L22,36 L20,31 L15,29 L20,27 Z" />
@@ -298,9 +269,6 @@ const OctagonSheepLogo = ({ color = '#ffffff', isEating = false, isHappy = false
   </svg>
 );
 
-// ==========================================
-// 2. Google Apps Script（GAS）URL
-// ==========================================
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwyLOy2SO5X9bvR8SBc_uPy1ICbw6D3u_ABkQYRHAEJgNMK3LeNl7EAsvassfClx26CQA/exec';
 const CONTACT_GAS_URL = 'https://script.google.com/macros/s/AKfycby-K4JPPfPLIFzO0wJmv53JV-7G6uSKUaWQEQlVFpNem7ZuucK8Q88464cOc8QyGPMwaw/exec';
 
@@ -322,9 +290,6 @@ const SAMPLE_GAS_CODE = `function doPost(e) {
   return ContentService.createTextOutput("Success");
 }`;
 
-// ==========================================
-// 3. デフォルトの商品・回数券リスト
-// ==========================================
 const DEFAULT_PRODUCTS: Item[] = [
   { id: '1', name: '大人 A', price: 1100 },
   { id: '2', name: '大人 B', price: 1000 },
@@ -344,7 +309,6 @@ const DEFAULT_TICKETS: Ticket[] = [
 ];
 
 export default function App() {
-  // アプリ設定（初期タイトルを「POSheep」に変更）
   const [appName, setAppName] = useState<string>(() => {
     return localStorage.getItem('pos_app_name') || 'POSheep';
   });
@@ -379,7 +343,7 @@ export default function App() {
 
   const [useSpreadsheet, setUseSpreadsheet] = useState<boolean>(() => {
     const saved = localStorage.getItem('pos_use_spreadsheet');
-    return saved ? JSON.parse(saved) : true;
+    return saved ? JSON.parse(saved) : false;
   });
 
   const [gasUrl, setGasUrl] = useState<string>(() => {
@@ -398,23 +362,24 @@ export default function App() {
   });
 
   const [customSecondary, setCustomSecondary] = useState<string>(() => {
-    return localStorage.getItem('pos_custom_secondary') || '#5f8263';
+    return localStorage.getItem('pos_custom_secondary') || '#1f2937';
   });
 
-  const [customBg, setCustomBg] = useState<string>(() => {
-    return localStorage.getItem('pos_custom_bg') || '#7ec994';
-  });
-
-  const [customCardBg, setCustomCardBg] = useState<string>(() => {
-    return localStorage.getItem('pos_custom_card_bg') || '#f0fbf4';
+  const [customBgColor, setCustomBgColor] = useState<string>(() => {
+    return localStorage.getItem('pos_custom_bg_color') || '#ffffff';
   });
 
   const t = themeMode === 'custom' 
-    ? generateCustomTheme(customPrimary, customSecondary, customBg, customCardBg) 
+    ? generateSmartCustomTheme(customPrimary, customSecondary, customBgColor) 
     : DEFAULT_THEMES[themeMode];
 
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'items' | 'theme' | 'settings' | 'guide' | 'faq' | 'contact'>('items');
+  
+  const [activeTab, setActiveTab] = useState<'items' | 'history' | 'guide' | 'settings' | 'theme' | 'faq' | 'contact' | 'news'>('items');
+
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+
+  const [showGuidePopup, setShowGuidePopup] = useState<boolean>(true);
 
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -437,6 +402,13 @@ export default function App() {
     return saved ? JSON.parse(saved) : DEFAULT_TICKETS;
   });
 
+  const [historyList, setHistoryList] = useState<HistoryRecord[]>(() => {
+    const saved = localStorage.getItem('pos_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [editingRecord, setEditingRecord] = useState<HistoryRecord | null>(null);
+
   const [showMemberKeypad, setShowMemberKeypad] = useState<boolean>(false);
   const [showCashKeypad, setShowCashKeypad] = useState<boolean>(false);
 
@@ -453,6 +425,23 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   
   const [isDesktop, setIsDesktop] = useState<boolean>(window.innerWidth >= 768);
+
+  useEffect(() => {
+    localStorage.setItem('pos_history', JSON.stringify(historyList));
+  }, [historyList]);
+
+  // Google AdSense スクリプト
+  useEffect(() => {
+    const scriptId = 'google-adsense-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.async = true;
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9422966920165721';
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+    }
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
@@ -524,12 +513,8 @@ export default function App() {
   }, [customSecondary]);
 
   useEffect(() => {
-    localStorage.setItem('pos_custom_bg', customBg);
-  }, [customBg]);
-
-  useEffect(() => {
-    localStorage.setItem('pos_custom_card_bg', customCardBg);
-  }, [customCardBg]);
+    localStorage.setItem('pos_custom_bg_color', customBgColor);
+  }, [customBgColor]);
 
   useEffect(() => {
     localStorage.setItem('pos_products', JSON.stringify(products));
@@ -555,6 +540,25 @@ export default function App() {
     minute: '2-digit',
     second: '2-digit',
   });
+
+  const saveToHistory = (sentDirectly = false): HistoryRecord => {
+    const record: HistoryRecord = {
+      id: Date.now().toString(),
+      dateTime: `${formattedDate} ${formattedTime}`,
+      memberNumber: useMemberNumber ? (memberNumber || 'なし') : '非使用',
+      cartItems: cart.map(c => ({ name: c.item.name, price: c.item.price, quantity: c.quantity })),
+      ticketItems: appliedTickets.map(t => ({ name: t.ticket.name, amount: t.ticket.amount, quantity: t.quantity })),
+      subtotal,
+      taxAmount,
+      totalAmount,
+      receivedAmount: numericReceived,
+      changeAmount,
+      sentToSheet: sentDirectly,
+    };
+
+    setHistoryList((prev) => [record, ...prev]);
+    return record;
+  };
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -660,9 +664,10 @@ export default function App() {
   };
 
   const handleResetAllSettings = () => {
-    if (confirm('⚠️ アプリ全体のすべての設定（商品・連携URL・消費税・アプリ名・テーマ等）を初期化しますか？')) {
+    if (confirm('⚠️ アプリ全体のすべての設定（商品・連携URL・消費税・アプリ名・テーマ・履歴等）を初期化しますか？')) {
       setProducts(DEFAULT_PRODUCTS);
       setTickets(DEFAULT_TICKETS);
+      setHistoryList([]);
       setAppName('POSheep');
       setProductSectionTitle('商品選択');
       setTicketSectionTitle('回数券');
@@ -670,16 +675,16 @@ export default function App() {
       setUseTickets(true);
       setUseTax(false);
       setTaxRate(10);
-      setUseSpreadsheet(true);
+      setUseSpreadsheet(false);
       setGasUrl(DEFAULT_GAS_URL);
       setThemeMode('light');
       setCustomPrimary('#27925c');
-      setCustomSecondary('#5f8263');
-      setCustomBg('#7ec994');
-      setCustomCardBg('#f0fbf4');
+      setCustomSecondary('#1f2937');
+      setCustomBgColor('#ffffff');
 
       localStorage.removeItem('pos_products');
       localStorage.removeItem('pos_tickets');
+      localStorage.removeItem('pos_history');
       localStorage.removeItem('pos_app_name');
       localStorage.removeItem('pos_prod_section_title');
       localStorage.removeItem('pos_ticket_section_title');
@@ -692,8 +697,7 @@ export default function App() {
       localStorage.removeItem('pos_theme');
       localStorage.removeItem('pos_custom_primary');
       localStorage.removeItem('pos_custom_secondary');
-      localStorage.removeItem('pos_custom_bg');
-      localStorage.removeItem('pos_custom_card_bg');
+      localStorage.removeItem('pos_custom_bg_color');
 
       alert('すべての設定を初期化しました。');
     }
@@ -807,7 +811,8 @@ export default function App() {
       alert('お預かり金額が不足しています');
       return;
     }
-    setSuccessMessage(`お会計が完了いたしました！\nお釣り: ¥${changeAmount.toLocaleString()}`);
+    saveToHistory(false);
+    setSuccessMessage(`お会計が完了いたしました！\nお釣り: ¥${changeAmount.toLocaleString()}\n（会計履歴へ保存されました）`);
     setShowSuccessModal(true);
     clearCart();
   };
@@ -817,8 +822,45 @@ export default function App() {
       alert('お預かり金額が不足しています');
       return;
     }
+    saveToHistory(false);
     setSuccessMessage(`お会計のお渡し確認完了いたしました！\nお釣り: ¥${changeAmount.toLocaleString()}\n\n※続けて「2. シートへ送信」を押してください。`);
     setShowSuccessModal(true);
+  };
+
+  const sendSingleRecordToSheet = async (record: HistoryRecord) => {
+    if (!gasUrl || gasUrl.trim() === '') {
+      throw new Error('スプレッドシートURLが未設定です。');
+    }
+
+    const payload: Record<string, any> = {
+      '日時': record.dateTime,
+      '会員番号': record.memberNumber,
+      '小計': record.subtotal,
+      [`消費税(${taxRate}%)`]: record.taxAmount,
+      'お支払い合計': record.totalAmount,
+      'お預かり': record.receivedAmount,
+      'お釣り': record.changeAmount,
+      '備考': record.isEdited ? `修正済(${record.editedAt})` : '新規',
+    };
+
+    products.forEach((product) => {
+      const cartItem = record.cartItems.find((c) => c.name === product.name);
+      payload[product.name] = cartItem ? cartItem.quantity : 0;
+    });
+
+    if (useTickets) {
+      tickets.forEach((ticket) => {
+        const ticketItem = record.ticketItems.find((t) => t.name === ticket.name);
+        payload[ticket.name] = ticketItem ? ticketItem.quantity : 0;
+      });
+    }
+
+    await fetch(gasUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload),
+    });
   };
 
   const handleSendToSpreadsheet = async () => {
@@ -833,37 +875,10 @@ export default function App() {
     }
 
     setIsSubmitting(true);
-
-    const payload: Record<string, any> = {
-      '日時': `${formattedDate} ${formattedTime}`,
-      '会員番号': useMemberNumber ? (memberNumber || 'なし') : '非使用',
-      '小計': subtotal,
-      [`消費税(${taxRate}%)`]: taxAmount,
-      'お支払い合計': totalAmount,
-      'お預かり': numericReceived,
-      'お釣り': changeAmount,
-    };
-
-    products.forEach((product) => {
-      const cartItem = cart.find((c) => c.item.id === product.id);
-      payload[product.name] = cartItem ? cartItem.quantity : 0;
-    });
-
-    if (useTickets) {
-      tickets.forEach((ticket) => {
-        const ticketItem = appliedTickets.find((t) => t.ticket.id === ticket.id);
-        payload[ticket.name] = ticketItem ? ticketItem.quantity : 0;
-      });
-    }
+    const newRecord = saveToHistory(true);
 
     try {
-      await fetch(gasUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload),
-      });
-
+      await sendSingleRecordToSheet(newRecord);
       setSuccessMessage('スプレッドシートへの記録が正常に完了いたしました！');
       setShowSuccessModal(true);
       clearCart();
@@ -873,6 +888,170 @@ export default function App() {
       setIsSubmitting(false);
     }
   };
+
+  const handleBulkSendToSpreadsheet = async () => {
+    if (historyList.length === 0) {
+      alert('送信対象の履歴が存在しません。');
+      return;
+    }
+
+    if (!gasUrl || gasUrl.trim() === '') {
+      alert('送信先のスプレッドシートURLが未設定です。');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      for (const rec of historyList) {
+        await sendSingleRecordToSheet(rec);
+      }
+
+      setHistoryList((prev) => prev.map(rec => ({ ...rec, sentToSheet: true })));
+      setSuccessMessage(`${historyList.length}件の履歴データをまとめてスプレッドシートへ送信完了いたしました！`);
+      setShowSuccessModal(true);
+    } catch (error) {
+      alert('まとめて送信中にエラーが発生いたしました。');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveEditedHistory = (updatedRec: HistoryRecord) => {
+    const nowStr = `${formattedDate} ${formattedTime}`;
+    const oldRec = historyList.find(h => h.id === updatedRec.id);
+
+    const oldSummaryText = oldRec 
+      ? `[旧内容] 会員:${oldRec.memberNumber} / 合計:¥${oldRec.totalAmount.toLocaleString()} (${oldRec.cartItems.map(i=>`${i.name}x${i.quantity}`).join(', ')})`
+      : '';
+
+    setHistoryList((prev) => prev.map(rec => {
+      if (rec.id === updatedRec.id) {
+        return {
+          ...updatedRec,
+          isEdited: true,
+          editedAt: nowStr,
+          oldSummary: oldSummaryText,
+          sentToSheet: false,
+        };
+      }
+      return rec;
+    }));
+
+    setEditingRecord(null);
+    setSuccessMessage('履歴データを修正いたしました。（打ち消し線にて履歴を記録しました）');
+    setShowSuccessModal(true);
+  };
+
+  // ★「お知らせ一覧に戻る」処理の修正関数
+  const handleBackToNewsList = () => {
+    setSelectedNews(null);
+    setActiveTab('news');
+    setIsMenuOpen(true);
+  };
+
+  // 全画面お知らせ詳細表示
+  if (selectedNews) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: t.bg,
+        color: t.text,
+        zIndex: 3000,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'sans-serif'
+      }}>
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          backgroundColor: t.headerBg,
+          color: t.headerText,
+          padding: '14px 20px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          zIndex: 10
+        }}>
+          <button
+            onClick={handleBackToNewsList}
+            style={{
+              backgroundColor: t.productBg,
+              color: t.productPrice,
+              border: `1px solid ${t.productBorder}`,
+              borderRadius: '6px',
+              padding: '6px 14px',
+              fontSize: '13px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            ← お知らせ一覧に戻る
+          </button>
+          <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{appName} お知らせ</div>
+        </div>
+
+        <div style={{
+          maxWidth: '720px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '24px 16px',
+          boxSizing: 'border-box'
+        }}>
+          <div style={{
+            backgroundColor: t.cardBg,
+            border: `1px solid ${t.border}`,
+            borderRadius: '16px',
+            padding: '24px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            textAlign: 'left'
+          }}>
+            <div style={{ fontSize: '13px', color: t.subText, marginBottom: '8px', fontWeight: 'bold', textAlign: 'left' }}>
+              📅 配信日: {selectedNews.date}
+            </div>
+            <h1 style={{ fontSize: '20px', fontWeight: 'bold', color: t.text, marginTop: 0, marginBottom: '16px', lineHeight: '1.4', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '10px', textAlign: 'left' }}>
+              {selectedNews.title}
+            </h1>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', lineHeight: '1.7', color: t.text, textAlign: 'left' }}>
+              {selectedNews.content.map((paragraph, idx) => (
+                <p key={idx} style={{ margin: 0, whiteSpace: 'pre-wrap', textAlign: 'left' }}>
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+
+            <div style={{ marginTop: '32px', borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
+              <button
+                onClick={handleBackToNewsList}
+                style={{
+                  backgroundColor: t.productPrice,
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                お知らせ一覧へ戻る
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -887,6 +1066,7 @@ export default function App() {
       boxSizing: 'border-box',
       transition: 'background-color 0.3s ease',
       margin: 0,
+      position: 'relative'
     }}>
       
       {/* 1. 固定ヘッダー */}
@@ -1104,7 +1284,7 @@ export default function App() {
           transition: 'background-color 0.3s ease'
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: `1px solid ${themeMode === 'pastel' || themeMode === 'vivid' ? t.border : 'rgba(255,255,255,0.15)'}`, paddingBottom: '6px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: `1px solid ${t.border}`, paddingBottom: '6px', flexShrink: 0 }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: t.cartText, margin: 0 }}>お会計内容</h2>
               {useMemberNumber && memberNumber && (
                 <span style={{ fontSize: '14px', color: t.cartText, fontWeight: 'bold' }}>会員: {memberNumber}</span>
@@ -1187,7 +1367,7 @@ export default function App() {
 
           <div style={{
             backgroundColor: t.summaryBg,
-            border: `1px solid ${themeMode === 'vivid' ? '#f97316' : themeMode === 'pastel' ? '#f472b6' : 'rgba(128,128,128,0.2)'}`,
+            border: `1px solid rgba(128,128,128,0.2)`,
             padding: '14px 16px',
             borderRadius: '8px',
             flexShrink: 0
@@ -1312,7 +1492,7 @@ export default function App() {
                   textAlign: 'right',
                   fontSize: '22px',
                   fontWeight: 'bold',
-                  backgroundColor: themeMode === 'vivid' || themeMode === 'pastel' || getContrastingTextColor(t.summaryBg) === '#0f172a' ? '#ffffff' : 'rgba(0,0,0,0.3)',
+                  backgroundColor: getContrastingTextColor(t.summaryBg) === '#0f172a' ? '#ffffff' : 'rgba(0,0,0,0.3)',
                   color: getContrastingTextColor(t.summaryBg) === '#0f172a' ? '#0f172a' : '#ffffff',
                   border: '1px solid rgba(128,128,128,0.4)',
                   borderRadius: '6px',
@@ -1322,7 +1502,7 @@ export default function App() {
               />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${themeMode === 'vivid' ? '#f97316' : themeMode === 'pastel' ? '#f472b6' : 'rgba(128,128,128,0.2)'}`, paddingTop: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid rgba(128,128,128,0.2)`, paddingTop: '8px' }}>
               <span style={{ fontSize: '18px', color: t.cartText }}>お釣り:</span>
               <span style={{ fontSize: '32px', fontWeight: '800', color: t.accentChange }}>
                 ¥{changeAmount.toLocaleString()}
@@ -1392,6 +1572,70 @@ export default function App() {
 
         </div>
       </div>
+
+      {/* 4. サイト訪問時の右下使い方ガイドポップアップ */}
+      {showGuidePopup && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          zIndex: 1500,
+          backgroundColor: t.cardBg,
+          color: t.text,
+          border: `2px solid ${t.productPrice}`,
+          borderRadius: '12px',
+          padding: '12px 16px',
+          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          maxWidth: '320px',
+          animation: 'fadeIn 0.3s ease-in-out'
+        }}>
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <div style={{ fontWeight: 'bold', fontSize: '13px', color: t.productPrice, marginBottom: '2px' }}>
+              POSheepへようこそ！🐑
+            </div>
+            <div style={{ fontSize: '12px', color: t.subText }}>
+              レジの使い方や解説をご確認いただけます。
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setActiveTab('guide');
+              setIsMenuOpen(true);
+              setShowGuidePopup(false);
+            }}
+            style={{
+              backgroundColor: t.productPrice,
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '6px 10px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            使い方を見る 📖
+          </button>
+          <button
+            onClick={() => setShowGuidePopup(false)}
+            style={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              fontSize: '18px',
+              color: t.subText,
+              cursor: 'pointer',
+              padding: '0 2px'
+            }}
+            title="消す"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* ローディング中画面 */}
       {(isSubmitting || isContactSubmitting) && (
@@ -1548,7 +1792,73 @@ export default function App() {
         </div>
       )}
 
-      {/* モーダル */}
+      {/* 履歴の編集用ダイアログモーダル */}
+      {editingRecord && (
+        <div onClick={() => setEditingRecord(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1200, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: t.drawerBg, color: t.drawerText, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '440px', maxHeight: '85vh', overflowY: 'auto', border: `1px solid ${t.border}`, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)', boxSizing: 'border-box' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 'bold', borderBottom: `1px solid ${t.border}`, paddingBottom: '8px' }}>✏️ 会計履歴の修正</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
+              <div>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>会員番号</label>
+                <input
+                  type="text"
+                  value={editingRecord.memberNumber}
+                  onChange={(e) => setEditingRecord({ ...editingRecord, memberNumber: e.target.value })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>修正後の合計金額 (円)</label>
+                <input
+                  type="number"
+                  value={editingRecord.totalAmount}
+                  onChange={(e) => setEditingRecord({ ...editingRecord, totalAmount: Number(e.target.value) })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, backgroundColor: t.bg, color: t.text, boxSizing: 'border-box', fontWeight: 'bold' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>購入商品内訳</label>
+                {editingRecord.cartItems.map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                    <span>個数:</span>
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => {
+                        const newCart = [...editingRecord.cartItems];
+                        newCart[idx].quantity = Number(e.target.value);
+                        setEditingRecord({ ...editingRecord, cartItems: newCart });
+                      }}
+                      style={{ width: '60px', padding: '4px 6px', borderRadius: '4px', border: `1px solid ${t.border}`, textAlign: 'center' }}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                <button
+                  onClick={() => setEditingRecord(null)}
+                  style={{ flex: 1, padding: '10px', backgroundColor: t.bg, color: t.subText, border: `1px solid ${t.border}`, borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={() => handleSaveEditedHistory(editingRecord)}
+                  style={{ flex: 1, padding: '10px', backgroundColor: '#16a34a', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  修正を確定保存
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 新規追加フォーム付全表示モーダル */}
       {expandModalType && (
         <div 
           onClick={() => setExpandModalType(null)} 
@@ -1561,12 +1871,69 @@ export default function App() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: `1px solid ${t.border}`, paddingBottom: '10px', flexShrink: 0 }}>
               <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 'bold', color: t.drawerText }}>
                 {expandModalType === 'products' ? (
-                  <>📦 {productSectionTitle}一覧</>
+                  <>📦 {productSectionTitle}一覧・新規追加</>
                 ) : (
-                  <>🎟️ {ticketSectionTitle}一覧</>
+                  <>🎟️ {ticketSectionTitle}一覧・新規追加</>
                 )}
               </h3>
               <button onClick={() => setExpandModalType(null)} style={{ border: 'none', backgroundColor: 'transparent', fontSize: '22px', cursor: 'pointer', color: t.subText }}>✕</button>
+            </div>
+
+            <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px', marginBottom: '12px', flexShrink: 0 }}>
+              <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '8px', color: t.text }}>
+                ＋ 新しい{expandModalType === 'products' ? productSectionTitle : ticketSectionTitle}を追加
+              </div>
+              {expandModalType === 'products' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="商品名 (例: 大人 E)"
+                    value={newProdName}
+                    onChange={(e) => setNewProdName(e.target.value)}
+                    style={{ padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '13px', backgroundColor: t.cardBg, color: t.text }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="number"
+                      placeholder="価格 (円)"
+                      value={newProdPrice}
+                      onChange={(e) => setNewProdPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '13px', backgroundColor: t.cardBg, color: t.text }}
+                    />
+                    <button
+                      onClick={handleAddProduct}
+                      style={{ backgroundColor: t.productPrice, color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
+                    >
+                      追加
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="回数券名 (例: ★特別券)"
+                    value={newTicketName}
+                    onChange={(e) => setNewTicketName(e.target.value)}
+                    style={{ padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '13px', backgroundColor: t.cardBg, color: t.text }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="number"
+                      placeholder="割引額 (円)"
+                      value={newTicketAmount}
+                      onChange={(e) => setNewTicketAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: `1px solid ${t.border}`, fontSize: '13px', backgroundColor: t.cardBg, color: t.text }}
+                    />
+                    <button
+                      onClick={handleAddTicket}
+                      style={{ backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}
+                    >
+                      追加
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
@@ -1626,7 +1993,7 @@ export default function App() {
               backgroundColor: t.drawerBg,
               color: t.drawerText,
               width: '92%',
-              maxWidth: '440px',
+              maxWidth: '460px',
               height: '100%',
               boxSizing: 'border-box',
               padding: '20px 16px',
@@ -1638,7 +2005,7 @@ export default function App() {
               transition: 'all 0.3s ease'
             }}
           >
-            {/* 6つのタブ切替バー */}
+            {/* 8つのタブ切替バー */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${t.border}`, marginBottom: '16px', flexShrink: 0 }}>
               <div style={{ display: 'flex', flex: 1, gap: '2px', overflowX: 'auto', paddingBottom: '4px' }}>
                 <button
@@ -1655,39 +2022,23 @@ export default function App() {
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  ⚙️ 会計項目
+                  ✏️ 会計項目
                 </button>
                 <button
-                  onClick={() => setActiveTab('theme')}
+                  onClick={() => setActiveTab('history')}
                   style={{
                     padding: '8px 6px',
                     border: 'none',
                     backgroundColor: 'transparent',
-                    borderBottom: activeTab === 'theme' ? `3px solid ${t.productPrice}` : 'none',
+                    borderBottom: activeTab === 'history' ? `3px solid ${t.productPrice}` : 'none',
                     fontWeight: 'bold',
                     fontSize: '13px',
-                    color: activeTab === 'theme' ? t.productPrice : t.subText,
+                    color: activeTab === 'history' ? t.productPrice : t.subText,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  🎨 カラー
-                </button>
-                <button
-                  onClick={() => setActiveTab('settings')}
-                  style={{
-                    padding: '8px 6px',
-                    border: 'none',
-                    backgroundColor: 'transparent',
-                    borderBottom: activeTab === 'settings' ? `3px solid ${t.productPrice}` : 'none',
-                    fontWeight: 'bold',
-                    fontSize: '13px',
-                    color: activeTab === 'settings' ? t.productPrice : t.subText,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  ✏️ アプリ設定
+                  📜 会計履歴
                 </button>
                 <button
                   onClick={() => setActiveTab('guide')}
@@ -1706,6 +2057,38 @@ export default function App() {
                   📖 使い方
                 </button>
                 <button
+                  onClick={() => setActiveTab('settings')}
+                  style={{
+                    padding: '8px 6px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    borderBottom: activeTab === 'settings' ? `3px solid ${t.productPrice}` : 'none',
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    color: activeTab === 'settings' ? t.productPrice : t.subText,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  ⚙️ アプリ設定
+                </button>
+                <button
+                  onClick={() => setActiveTab('theme')}
+                  style={{
+                    padding: '8px 6px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    borderBottom: activeTab === 'theme' ? `3px solid ${t.productPrice}` : 'none',
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    color: activeTab === 'theme' ? t.productPrice : t.subText,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  🎨 カラー
+                </button>
+                <button
                   onClick={() => setActiveTab('faq')}
                   style={{
                     padding: '8px 6px',
@@ -1719,7 +2102,7 @@ export default function App() {
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  ❓ FAQ・規約
+                  ❓ FAQ
                 </button>
                 <button
                   onClick={() => setActiveTab('contact')}
@@ -1737,6 +2120,22 @@ export default function App() {
                 >
                   ✉️ お問い合わせ
                 </button>
+                <button
+                  onClick={() => setActiveTab('news')}
+                  style={{
+                    padding: '8px 6px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    borderBottom: activeTab === 'news' ? `3px solid ${t.productPrice}` : 'none',
+                    fontWeight: 'bold',
+                    fontSize: '13px',
+                    color: activeTab === 'news' ? t.productPrice : t.subText,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  📢 お知らせ
+                </button>
               </div>
               <button
                 onClick={() => setIsMenuOpen(false)}
@@ -1751,7 +2150,7 @@ export default function App() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px', textAlign: 'left' }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left' }}>{productSectionTitle}リストの編集</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left' }}>✏️ {productSectionTitle}リストの編集</h3>
                     <button
                       onClick={() => setExpandModalType('products')}
                       style={{ backgroundColor: t.productBg, color: t.productPrice, border: `1px solid ${t.productBorder}`, borderRadius: '4px', padding: '3px 8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
@@ -1862,126 +2261,112 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: カラーモードの編集 */}
-            {activeTab === 'theme' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px', textAlign: 'left' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left' }}>テーマカラーの選択</h3>
-                <p style={{ fontSize: '13px', color: t.subText, margin: 0, textAlign: 'left' }}>画面全体の配色を切り替えます。</p>
+            {/* TAB 2: 📜 会計履歴 */}
+            {activeTab === 'history' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', margin: 0 }}>📜 会計履歴（修正・一括送信）</h3>
+                  <button
+                    onClick={handleBulkSendToSpreadsheet}
+                    disabled={historyList.length === 0}
+                    style={{
+                      backgroundColor: historyList.length > 0 ? '#2563eb' : t.border,
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      cursor: historyList.length > 0 ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    📊 まとめてシート送信
+                  </button>
+                </div>
 
-                {(['light', 'dark', 'vivid', 'pastel'] as const).map((mode) => {
-                  const themeItem = DEFAULT_THEMES[mode];
-                  const isSelected = themeMode === mode;
-                  return (
-                    <button
-                      key={mode}
-                      onClick={() => setThemeMode(mode)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '14px 16px',
-                        borderRadius: '10px',
-                        border: isSelected ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
-                        backgroundColor: themeItem.bg,
-                        color: themeItem.text,
-                        cursor: 'pointer',
-                        boxShadow: isSelected ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <span style={{ fontWeight: 'bold', fontSize: '15px' }}>{themeItem.name}</span>
-                      {isSelected && <span style={{ color: t.productPrice, fontWeight: 'bold', fontSize: '18px' }}>✓</span>}
-                    </button>
-                  );
-                })}
+                <p style={{ fontSize: '12px', color: t.subText, margin: 0 }}>
+                  過去の会計内容を確認・修正できます。修正された記録は打ち消し線（横線）付きで残ります。
+                </p>
 
-                <button
-                  onClick={() => setThemeMode('custom')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '14px 16px',
-                    borderRadius: '10px',
-                    border: themeMode === 'custom' ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
-                    backgroundColor: t.cardBg,
-                    color: t.text,
-                    cursor: 'pointer',
-                    boxShadow: themeMode === 'custom' ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <span style={{ fontWeight: 'bold', fontSize: '15px' }}>🎨 カスタム（オリジナル）</span>
-                  {themeMode === 'custom' && <span style={{ color: t.productPrice, fontWeight: 'bold', fontSize: '18px' }}>✓</span>}
-                </button>
+                {historyList.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '20px 0', color: t.subText, fontSize: '14px' }}>
+                    会計履歴はまだありません。
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+                    {historyList.map((rec) => (
+                      <div key={rec.id} style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '10px 12px', position: 'relative' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: t.subText, marginBottom: '4px' }}>
+                          <span>{rec.dateTime}</span>
+                          <span>会員: {rec.memberNumber}</span>
+                        </div>
 
-                {themeMode === 'custom' && (
-                  <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '14px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '14px', color: t.text }}>オリジナル配色の自由作成</div>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.text }}>メインカラー</div>
-                        <div style={{ fontSize: '11px', color: t.subText }}>ヘッダー・ボタン・アクセント</div>
+                        {rec.isEdited && rec.oldSummary && (
+                          <div style={{ fontSize: '11px', color: '#ef4444', textDecoration: 'line-through', marginBottom: '4px', opacity: 0.8 }}>
+                            {rec.oldSummary}
+                          </div>
+                        )}
+
+                        <div style={{ fontWeight: 'bold', fontSize: '14px', color: t.text, marginBottom: '4px' }}>
+                          お支払い合計: ¥{rec.totalAmount.toLocaleString()}
+                        </div>
+
+                        <div style={{ fontSize: '12px', color: t.subText, marginBottom: '6px' }}>
+                          注文: {rec.cartItems.map(i => `${i.name}×${i.quantity}`).join(', ') || 'なし'}
+                          {rec.ticketItems.length > 0 && ` (${rec.ticketItems.map(t => `${t.name}×${t.quantity}`).join(', ')})`}
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${t.border}`, paddingTop: '6px', marginTop: '4px' }}>
+                          <span style={{ fontSize: '11px', color: rec.sentToSheet ? '#16a34a' : '#f59e0b', fontWeight: 'bold' }}>
+                            {rec.sentToSheet ? '✓ シート送信済' : '未送信'} {rec.isEdited && '(修正済)'}
+                          </span>
+                          <button
+                            onClick={() => setEditingRecord(rec)}
+                            style={{ backgroundColor: t.cardBg, border: `1px solid ${t.border}`, color: t.text, borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                          >
+                            ✏️ 修正
+                          </button>
+                        </div>
                       </div>
-                      <input
-                        type="color"
-                        value={customPrimary}
-                        onChange={(e) => setCustomPrimary(e.target.value)}
-                        style={{ border: 'none', width: '36px', height: '36px', cursor: 'pointer', borderRadius: '6px', backgroundColor: 'transparent' }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.text }}>サブカラー</div>
-                        <div style={{ fontSize: '11px', color: t.subText }}>右側お会計内容エリア</div>
-                      </div>
-                      <input
-                        type="color"
-                        value={customSecondary}
-                        onChange={(e) => setCustomSecondary(e.target.value)}
-                        style={{ border: 'none', width: '36px', height: '36px', cursor: 'pointer', borderRadius: '6px', backgroundColor: 'transparent' }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.text }}>商品エリア背景カラー</div>
-                        <div style={{ fontSize: '11px', color: t.subText }}>左側商品選択カード背景</div>
-                      </div>
-                      <input
-                        type="color"
-                        value={customCardBg}
-                        onChange={(e) => setCustomCardBg(e.target.value)}
-                        style={{ border: 'none', width: '36px', height: '36px', cursor: 'pointer', borderRadius: '6px', backgroundColor: 'transparent' }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: t.text }}>全体画面背景カラー</div>
-                        <div style={{ fontSize: '11px', color: t.subText }}>アプリ全体のバックグラウンド</div>
-                      </div>
-                      <input
-                        type="color"
-                        value={customBg}
-                        onChange={(e) => setCustomBg(e.target.value)}
-                        style={{ border: 'none', width: '36px', height: '36px', cursor: 'pointer', borderRadius: '6px', backgroundColor: 'transparent' }}
-                      />
-                    </div>
+                    ))}
                   </div>
                 )}
-
               </div>
             )}
 
-            {/* TAB 3: アプリ設定 */}
+            {/* TAB 3: 📖 使い方 */}
+            {activeTab === 'guide' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>📖 レジの使い方ガイド</h3>
+
+                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>1. 商品・回数券の選択</div>
+                  画面左側のリストから、注文された商品や利用する回数券をタップします。カート内の数量変更（＋/－）や1部削除も画面上で簡単に行えます。
+                </div>
+
+                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>2. 会員番号の入力（任意）</div>
+                  「会員番号」機能がONの場合、番号欄をタップすると専用テンキーが表示されます。番号を入力して「決定」を押すとカートに保持されます。
+                </div>
+
+                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>3. お預かり金額とお釣り</div>
+                  「ぴったり」や「+1000」などのクイックボタン、または金額欄をタップして表示されるテンキーから預かり現金を自動計算できます。
+                </div>
+
+                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>4. 会計完了とスプレッドシート送信</div>
+                  「1. 会計を完了する」でお渡し確認を行い、「2. シートへ送信」を押すことで外部スプレッドシートへ記録が行われます。
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: ⚙️ アプリ設定 */}
             {activeTab === 'settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '20px', textAlign: 'left' }}>
                 <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div>
-                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>タイトル名の変更</h3>
+                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>⚙️ タイトル名の変更</h3>
                     <input
                       type="text"
                       value={appName}
@@ -2097,7 +2482,7 @@ export default function App() {
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '16px', textAlign: 'left' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, marginBottom: '6px', textAlign: 'left' }}>消費税設定</h3>
                   <p style={{ fontSize: '12px', color: t.subText, marginBottom: '12px', textAlign: 'left' }}>お会計に消費税を自動加算するか設定します。</p>
-                  
+
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
                     <button
                       onClick={() => setUseTax(false)}
@@ -2289,34 +2674,134 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 4: 📖 使い方 */}
-            {activeTab === 'guide' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>📖 レジの使い方ガイド</h3>
+            {/* TAB 5: 🎨 カラーモード */}
+            {activeTab === 'theme' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px', textAlign: 'left' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left' }}>テーマカラーの選択</h3>
+                <p style={{ fontSize: '13px', color: t.subText, margin: 0, textAlign: 'left' }}>画面全体の配色プリセットを選択できます。</p>
 
-                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>1. 商品・回数券の選択</div>
-                  画面左側のリストから、注文された商品や利用する回数券をタップします。カート内の数量変更（＋/－）や1部削除も画面上で簡単に行えます。
-                </div>
+                {(['light', 'dark'] as const).map((mode) => {
+                  const themeItem = DEFAULT_THEMES[mode];
+                  const isSelected = themeMode === mode;
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => setThemeMode(mode)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '14px 16px',
+                        borderRadius: '10px',
+                        border: isSelected ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                        backgroundColor: themeItem.bg,
+                        color: themeItem.text,
+                        cursor: 'pointer',
+                        boxShadow: isSelected ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <span style={{ fontWeight: 'bold', fontSize: '15px' }}>{themeItem.name}</span>
+                      {isSelected && <span style={{ color: t.productPrice, fontWeight: 'bold', fontSize: '18px' }}>✓</span>}
+                    </button>
+                  );
+                })}
 
-                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>2. 会員番号の入力（任意）</div>
-                  「会員番号」機能がONの場合、番号欄をタップすると専用テンキーが表示されます。番号を入力して「決定」を押すとカートに保持されます。
-                </div>
+                <button
+                  onClick={() => setThemeMode('custom')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '14px 16px',
+                    borderRadius: '10px',
+                    border: themeMode === 'custom' ? `2px solid ${t.productPrice}` : `1px solid ${t.border}`,
+                    backgroundColor: t.cardBg,
+                    color: t.text,
+                    cursor: 'pointer',
+                    boxShadow: themeMode === 'custom' ? '0 4px 6px -1px rgba(37, 99, 235, 0.2)' : 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <span style={{ fontWeight: 'bold', fontSize: '15px' }}>🎨 オリジナル</span>
+                  {themeMode === 'custom' && <span style={{ color: t.productPrice, fontWeight: 'bold', fontSize: '18px' }}>✓</span>}
+                </button>
 
-                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>3. お預かり金額とお釣り</div>
-                  「ぴったり」や「+1000」などのクイックボタン、または金額欄をタップして表示されるテンキーから預かり現金を自動計算できます。
-                </div>
+                {themeMode === 'custom' && (
+                  <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '12px', padding: '16px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: t.text, marginBottom: '2px' }}>✨ 好きな2色を選ぶだけで自動配色！</div>
+                      <div style={{ fontSize: '12px', color: t.subText }}>メイン色とサブ色の2色から、おしゃれなテーマを全自動生成します。</div>
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div style={{ backgroundColor: t.cardBg, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: t.text }}>① メインカラー</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input
+                            type="color"
+                            value={customPrimary}
+                            onChange={(e) => setCustomPrimary(e.target.value)}
+                            style={{ border: 'none', width: '38px', height: '38px', cursor: 'pointer', borderRadius: '6px', backgroundColor: 'transparent' }}
+                          />
+                          <span style={{ fontSize: '11px', fontFamily: 'monospace', color: t.subText }}>{customPrimary}</span>
+                        </div>
+                      </div>
 
-                <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>4. 会計完了とスプレッドシート送信</div>
-                  「1. 会計を完了する」でお渡し確認を行い、「2. シートへ送信」を押すことで外部スプレッドシートへ記録が行われます。
-                </div>
+                      <div style={{ backgroundColor: t.cardBg, padding: '10px', borderRadius: '8px', border: `1px solid ${t.border}`, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: t.text }}>② サブカラー</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input
+                            type="color"
+                            value={customSecondary}
+                            onChange={(e) => setCustomSecondary(e.target.value)}
+                            style={{ border: 'none', width: '38px', height: '38px', cursor: 'pointer', borderRadius: '6px', backgroundColor: 'transparent' }}
+                          />
+                          <span style={{ fontSize: '11px', fontFamily: 'monospace', color: t.subText }}>{customSecondary}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 'bold', color: t.text, marginBottom: '8px' }}>💡 ワンタップおすすめ配色セット:</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {[
+                          { name: 'ミント🌿', p: '#10b981', s: '#064e3b', bg: '#ffffff' },
+                          { name: 'サクラ🌸', p: '#ec4899', s: '#831843', bg: '#ffffff' },
+                          { name: 'オーシャン🌊', p: '#0284c7', s: '#0f172a', bg: '#ffffff' },
+                          { name: 'サンセット🌅', p: '#f97316', s: '#7c2d12', bg: '#ffffff' },
+                          { name: 'シック🖤', p: '#4b5563', s: '#111827', bg: '#1f2937' }
+                        ].map(preset => (
+                          <button
+                            key={preset.name}
+                            onClick={() => {
+                              setCustomPrimary(preset.p);
+                              setCustomSecondary(preset.s);
+                              setCustomBgColor(preset.bg);
+                            }}
+                            style={{
+                              backgroundColor: t.cardBg,
+                              border: `1px solid ${t.border}`,
+                              borderRadius: '6px',
+                              padding: '6px 10px',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              color: t.text
+                            }}
+                          >
+                            {preset.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
 
-            {/* TAB 5: ❓ FAQ ＆ プライバシーポリシー */}
+            {/* TAB 6: ❓ FAQ ＆ プライバシーポリシー */}
             {activeTab === 'faq' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
                 <div>
@@ -2353,7 +2838,7 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 6: ✉️ お問い合わせ */}
+            {/* TAB 7: ✉️ お問い合わせ */}
             {activeTab === 'contact' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px', textAlign: 'left' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>✉️ お問い合わせ</h3>
@@ -2414,6 +2899,47 @@ export default function App() {
                     {isContactSubmitting ? '送信中...' : '送信する'}
                   </button>
                 </form>
+              </div>
+            )}
+
+            {/* TAB 8: 📢 お知らせ */}
+            {activeTab === 'news' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>📢 お知らせ一覧</h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {NEWS_LIST.map((news) => (
+                    <div
+                      key={news.id}
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setSelectedNews(news);
+                      }}
+                      style={{
+                        backgroundColor: t.bg,
+                        border: `1px solid ${t.border}`,
+                        borderRadius: '10px',
+                        padding: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <div style={{ fontSize: '11px', color: t.productPrice, fontWeight: 'bold', marginBottom: '4px' }}>
+                        📅 {news.date}
+                      </div>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: t.text, marginBottom: '6px', lineHeight: '1.4' }}>
+                        {news.title}
+                      </div>
+                      <div style={{ fontSize: '12px', color: t.subText, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {news.summary}
+                      </div>
+                      <div style={{ marginTop: '8px', fontSize: '12px', color: t.productPrice, fontWeight: 'bold', textAlign: 'right' }}>
+                        記事を読む ➔
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
