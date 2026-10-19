@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 
 // ==========================================
@@ -136,7 +137,7 @@ const DEFAULT_THEMES: Record<Exclude<ThemeMode, 'custom'>, ThemeConfig> = {
 
 const NEWS_LIST: NewsItem[] = [
   {
-   id: 'news-1',
+    id: 'news-1',
     title: '🚀 POSheep テスト版リリースのお知らせ (v1.0.0-beta)',
     date: '2026/10/11',
     summary: 'Web POSレジアプリ「POSheep（ポシップ）」のテスト版をオープンいたしました。主な新機能や今後の展開についてご覧いただけます。',
@@ -306,7 +307,7 @@ const DEFAULT_TICKETS: Ticket[] = [
   { id: 't2', name: '★子供回数券', amount: 300 },
 ];
 
-export default function App() {
+export default function PosAppPage() {
   const [appName, setAppName] = useState<string>(() => {
     return localStorage.getItem('pos_app_name') || 'POSheep';
   });
@@ -435,7 +436,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('pos_history', JSON.stringify(historyList));
   }, [historyList]);
-
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
@@ -792,7 +792,6 @@ export default function App() {
     setMemberNumber('');
   };
 
-  // メイン画面でのダイレクトインライン編集保存
   const handleSaveInlineEdit = () => {
     if (!editingInlineItem) return;
     if (editingInlineItem.type === 'product') {
@@ -803,7 +802,6 @@ export default function App() {
     setEditingInlineItem(null);
   };
 
-  // ドラッグ＆ドロップ並び替えハンドラー
   const handleDragStart = (index: number, type: 'product' | 'ticket') => {
     if (!isEditMode) return;
     setDraggedIndex(index);
@@ -992,7 +990,6 @@ export default function App() {
     setIsMenuOpen(true);
   };
 
-  // 全画面お知らせ詳細表示
   if (selectedNews) {
     return (
       <div style={{
@@ -1111,7 +1108,7 @@ export default function App() {
       position: 'relative'
     }}>
       
-      {/* 1. 固定ヘッダー */}
+      {/* 固定ヘッダー */}
       <div style={{
         position: 'sticky',
         top: 0,
@@ -1152,6 +1149,28 @@ export default function App() {
             ☰
           </button>
 
+          {/* トップページへ戻るボタン */}
+          <Link
+            to="/"
+            style={{
+              backgroundColor: t.productBg,
+              color: t.productPrice,
+              border: `1px solid ${t.productBorder}`,
+              borderRadius: '6px',
+              padding: '5px 10px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              flexShrink: 0
+            }}
+          >
+            🏠 トップページ
+          </Link>
+
           <OctagonSheepLogo color={t.headerText} />
 
           <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold', color: t.headerText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -1160,7 +1179,6 @@ export default function App() {
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-          {/* メイン画面ダイレクト編集モード切り替えボタン */}
           <button
             onClick={() => setIsEditMode(!isEditMode)}
             style={{
@@ -1189,7 +1207,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* メイン会計エリア（使いやすさ重視で縦幅をしっかり確保） */}
+      {/* メイン会計エリア */}
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
@@ -1256,7 +1274,7 @@ export default function App() {
               <h2 style={{ fontSize: '16px', fontWeight: 'bold', color: t.text, textAlign: 'left', margin: 0 }}>{productSectionTitle}</h2>
             </div>
 
-            {/* 商品ボタンリスト（ドラッグ＆ドロップ並び替え・新規追加・直接削除対応） */}
+            {/* 商品ボタンリスト */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', marginBottom: '16px' }}>
               {products.map((product, index) => (
                 <div
@@ -1286,7 +1304,6 @@ export default function App() {
                     opacity: draggedIndex === index && dragType === 'product' ? 0.4 : 1
                   }}
                 >
-                  {/* 編集モード時の直接削除ボタン */}
                   {isEditMode && (
                     <button
                       onClick={(e) => {
@@ -1337,7 +1354,6 @@ export default function App() {
                 </div>
               ))}
 
-              {/* 編集モード中表示：新規商品追加ボタン */}
               {isEditMode && (
                 <button
                   onClick={() => setExpandModalType('products')}
@@ -1399,7 +1415,6 @@ export default function App() {
                         opacity: draggedIndex === index && dragType === 'ticket' ? 0.4 : 1
                       }}
                     >
-                      {/* 編集モード時の直接削除ボタン */}
                       {isEditMode && (
                         <button
                           onClick={(e) => {
@@ -1450,7 +1465,6 @@ export default function App() {
                     </div>
                   ))}
 
-                  {/* 編集モード中表示：新規回数券追加ボタン */}
                   {isEditMode && (
                     <button
                       onClick={() => setExpandModalType('tickets')}
@@ -1501,7 +1515,7 @@ export default function App() {
           )}
         </div>
 
-        {/* 右側：会計内容（カート商品個別削除ボタン「✕」搭載） */}
+        {/* 右側：会計内容 */}
         <div style={{
           flex: '1 1 350px',
           backgroundColor: t.cartBg,
@@ -1523,7 +1537,6 @@ export default function App() {
               )}
             </div>
 
-            {/* カート明細リスト（個別商品削除ボタン「✕」設置） */}
             <div style={{ flex: 1, minHeight: '180px', maxHeight: '420px', overflowY: 'auto', marginBottom: '12px', paddingRight: '4px' }}>
               {cart.length === 0 && appliedTickets.length === 0 ? (
                 <div style={{ color: t.cartText, fontSize: '16px', textAlign: 'left', opacity: 0.8 }}>商品または回数券を選択してください</div>
@@ -1625,7 +1638,6 @@ export default function App() {
               </span>
             </div>
 
-            {/* クイックお預かりボタン */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', marginBottom: '10px' }}>
               <button
                 onClick={() => setReceivedAmount(totalAmount)}
@@ -1709,7 +1721,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* お預かり入力欄 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <span style={{ fontSize: '18px', color: t.cartText }}>お預かり:</span>
               <input
@@ -1805,7 +1816,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* メイン画面最下部：スクロールで表示されるフッターエリア */}
+      {/* フッター */}
       <footer style={{
         marginTop: '20px',
         padding: '20px',
@@ -2053,7 +2064,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 4. サイト訪問時の右下使い方ガイドポップアップ */}
+      {/* 右下使い方ガイドポップアップ */}
       {showGuidePopup && (
         <div style={{
           position: 'fixed',
@@ -2116,7 +2127,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ローディング中画面 */}
+      {/* ローディング画面 */}
       {(isSubmitting || isContactSubmitting) && (
         <div style={{
           position: 'fixed',
@@ -2237,7 +2248,7 @@ export default function App() {
         </div>
       )}
 
-      {/* お預かり現金テンキー */}
+      {/* 現金テンキー */}
       {showCashKeypad && (
         <div onClick={() => setShowCashKeypad(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '320px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)', boxSizing: 'border-box' }}>
@@ -2271,7 +2282,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 履歴の編集用ダイアログモーダル */}
+      {/* 履歴修正ダイアログ */}
       {editingRecord && (
         <div onClick={() => setEditingRecord(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1200, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: t.drawerBg, color: t.drawerText, borderRadius: '16px', padding: '20px', width: '100%', maxWidth: '440px', maxHeight: '85vh', overflowY: 'auto', border: `1px solid ${t.border}`, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)', boxSizing: 'border-box' }}>
@@ -2337,7 +2348,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 新規追加フォーム付全表示モーダル */}
+      {/* 新規追加モーダル */}
       {expandModalType && (
         <div 
           onClick={() => setExpandModalType(null)} 
@@ -2484,7 +2495,6 @@ export default function App() {
               transition: 'all 0.3s ease'
             }}
           >
-            {/* 8つのタブ切替バー */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${t.border}`, marginBottom: '16px', flexShrink: 0 }}>
               <div style={{ display: 'flex', flex: 1, gap: '2px', overflowX: 'auto', paddingBottom: '4px' }}>
                 <button
@@ -3280,7 +3290,7 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 6: ❓ FAQ ＆ 免責事項・注意事項・プライバシーポリシー */}
+            {/* TAB 6: ❓ FAQ ＆ 免責事項 */}
             {activeTab === 'faq' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
                 <div>
@@ -3304,7 +3314,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 免責事項・注意事項エリア */}
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: '14px' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: t.drawerText, margin: '0 0 8px 0', textAlign: 'left' }}>⚠️ 免責事項・注意事項</h3>
                   <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px', fontSize: '12px', color: t.text, display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -3441,7 +3450,6 @@ export default function App() {
               </div>
             )}
 
-            {/* フッター */}
             <div style={{ marginTop: 'auto', borderTop: `1px solid ${t.border}`, paddingTop: '16px', flexShrink: 0 }}>
               <button
                 onClick={() => setIsMenuOpen(false)}
