@@ -374,7 +374,6 @@ export default function PosAppPage() {
 
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   
-  // メイン画面でのダイレクト編集モード ＆ ドラッグ並び替えステート
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [editingInlineItem, setEditingInlineItem] = useState<{ id: string; name: string; price: number; type: 'product' | 'ticket' } | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -443,11 +442,17 @@ export default function PosAppPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 両サイドの黒い余白を無くすためのスタイル制御
   useEffect(() => {
+    document.documentElement.style.margin = '0';
+    document.documentElement.style.padding = '0';
+    document.documentElement.style.width = '100%';
+
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.body.style.maxWidth = 'none';
     document.body.style.width = '100%';
+    document.body.style.overflowX = 'hidden';
 
     const rootEl = document.getElementById('root');
     if (rootEl) {
@@ -1100,7 +1105,7 @@ export default function PosAppPage() {
       minHeight: '100vh',
       fontFamily: 'sans-serif',
       backgroundColor: t.bg,
-      padding: '0 0 0 0',
+      padding: '0',
       gap: '12px',
       boxSizing: 'border-box',
       transition: 'background-color 0.3s ease',
@@ -1149,33 +1154,25 @@ export default function PosAppPage() {
             ☰
           </button>
 
-          {/* トップページへ戻るボタン */}
+          {/* 羊アイコン ＋ アプリ名をタップするとトップページ（/）へ戻る */}
           <Link
             to="/"
             style={{
-              backgroundColor: t.productBg,
-              color: t.productPrice,
-              border: `1px solid ${t.productBorder}`,
-              borderRadius: '6px',
-              padding: '5px 10px',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              textDecoration: 'none',
-              whiteSpace: 'nowrap',
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              flexShrink: 0
+              gap: '8px',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              minWidth: 0
             }}
+            title="トップページへ戻る"
           >
-            🏠 トップページ
+            <OctagonSheepLogo color={t.headerText} />
+
+            <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold', color: t.headerText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {appName}
+            </h1>
           </Link>
-
-          <OctagonSheepLogo color={t.headerText} />
-
-          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold', color: t.headerText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {appName}
-          </h1>
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
