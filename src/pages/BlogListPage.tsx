@@ -9,7 +9,7 @@ export default function BlogListPage() {
       <nav style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '16px 24px', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link to="/" style={{ textDecoration: 'none', fontSize: '20px', fontWeight: 'bold', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            🐑 POSheep <span style={{ fontSize: '13px', color: '#475569', fontWeight: 'normal' }}>| ポシップ</span>
+            POSheep <span style={{ fontSize: '13px', color: '#475569', fontWeight: 'normal' }}>| ポシープ</span>
           </Link>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <Link to="/" style={{ color: '#334155', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px' }}>

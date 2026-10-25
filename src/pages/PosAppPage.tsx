@@ -140,10 +140,10 @@ const NEWS_LIST: NewsItem[] = [
     id: 'news-1',
     title: '🚀 POSheep テスト版リリースのお知らせ (v1.0.0-beta)',
     date: '2026/10/11',
-    summary: 'Web POSレジアプリ「POSheep（ポシップ）」のテスト版をオープンいたしました。主な新機能や今後の展開についてご覧いただけます。',
+    summary: 'Web POSレジアプリ「POSheep（ポシープ）」のテスト版をオープンいたしました。主な新機能や今後の展開についてご覧いただけます。',
     content: [
       'POSheepをご利用いただき誠にありがとうございます。',
-      'このたび、個人イベントで気軽に利用できるWeb POSレジアプリ「POSheep（ポシップ）」のテスト版（v1.0.0-beta）をリリースいたしました！',
+      'このたび、個人イベントで気軽に利用できるWeb POSレジアプリ「POSheep（ポシープ）」のテスト版（v1.0.0-beta）をリリースいたしました！',
       '■ 主な実装機能のご案内：',
       '・【会計計算＆クイック入力】手軽に商品を登録し、お釣り計算やクイック現金入力に対応。',
       '・【スプレッドシートリアルタイム連携】Google Apps Script（GAS）を利用した売上データの全自動スプレッドシート記録。',
@@ -597,7 +597,7 @@ export default function PosAppPage() {
       setContactSubject('');
       setContactMessage('');
     } catch (error) {
-      alert('お問い合わせの送信中にエラーが発生しました。設定をご確認ください。');
+      alert('お問い合わせの送信中にエラーが発生しました。再度ご確認ください。');
     } finally {
       setIsContactSubmitting(false);
     }
@@ -1039,7 +1039,7 @@ export default function PosAppPage() {
               gap: '4px'
             }}
           >
-            ← お知らせ一覧に戻る
+            ← 一覧に戻る
           </button>
           <div style={{ fontWeight: 'bold', fontSize: '15px' }}>{appName} お知らせ</div>
         </div>
@@ -2018,7 +2018,7 @@ export default function PosAppPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <OctagonSheepLogo color={t.productPrice} />
-                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: t.text }}>POSheep（ポシップ）のご紹介</h2>
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: t.text }}>POSheep（ポシープ）のご紹介</h2>
               </div>
               <button onClick={() => setShowAboutModal(false)} style={{ border: 'none', backgroundColor: 'transparent', fontSize: '22px', cursor: 'pointer', color: t.subText }}>✕</button>
             </div>
@@ -2026,16 +2026,16 @@ export default function PosAppPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.7', color: t.text }}>
               <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '14px' }}>
                 <div style={{ fontWeight: 'bold', fontSize: '14px', color: t.productPrice, marginBottom: '6px' }}>🐑 どんなアプリ？</div>
-                <b>POSheep（ポシップ）</b>は、小規模店舗・POP UPショップ・フリマ・イベント出店者様向けに開発された、ブラウザでスグに使える<b>完全無料の軽量Web POSレジアプリ</b>です。専用機器の購入は一切不要で、スマホ・タブレット・パソコンからアクセスするだけで即座にレジ業務を起動できます。
+                <b>POSheep</b>は、フリマ・イベント出店者様向けに開発された、ブラウザで簡単に使える<b>完全無料のオリジナルWeb POSレジアプリ</b>です。専用機器の購入は一切不要で、スマホ・タブレット・パソコンからアクセスするだけで即座にレジ業務を起動できます。<br>※端末を変更してのデータの共有はできません、アップデートをお待ちください</br>
               </div>
 
               <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '14px' }}>
                 <div style={{ fontWeight: 'bold', fontSize: '14px', color: t.productPrice, marginBottom: '6px' }}>✨ 主な機能・こだわり</div>
                 <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <li><b>即座に使える</b>: 会員番号や回数券割引、内税・外税設定を柔軟にカスタマイズ。</li>
-                  <li><b>スプレッドシート全自動連携</b>: Apps Script（GAS）で売上データを一瞬で記録。</li>
-                  <li><b>安心の履歴保存</b>: レジ締め時のミスをなくす打ち消し線付き修正機能 ＆ 一括送信。</li>
-                  <li><b>自由なデザイン</b>: 2色を選ぶだけで自分好みの配色が完成するスマートカラーテーマ。</li>
+                  <li><b>即座に使える</b>: 会員番号や回数券割引、内税・外税設定を柔軟にカスタマイズ</li>
+                  <li><b>スプレッドシート簡単連携</b>: Apps Script（GAS）で売上データを一瞬で記録可能</li>
+                  <li><b>安心の履歴保存</b>: レジ締め時のミスを減らす打ち消し線付き修正機能 ＆ 一括送信</li>
+                  <li><b>自由なデザイン</b>: 自分好みの配色が完成するスマートカラーテーマ</li>
                 </ul>
               </div>
             </div>
@@ -2771,12 +2771,12 @@ export default function PosAppPage() {
                 </div>
 
                 <p style={{ fontSize: '12px', color: t.subText, margin: 0 }}>
-                  過去の会計内容を確認・修正できます。修正された記録は打ち消し線（横線）付きで残ります。
+                  過去の会計内容を確認・修正可能、修正された記録は打ち消し線（横線）付きで残ります
                 </p>
 
                 {historyList.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '20px 0', color: t.subText, fontSize: '14px' }}>
-                    会計履歴はまだありません。
+                    会計履歴はありません
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
@@ -2823,11 +2823,11 @@ export default function PosAppPage() {
             {/* TAB 3: 📖 使い方 */}
             {activeTab === 'guide' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px', textAlign: 'left', fontSize: '13px', color: t.text, lineHeight: '1.6' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>📖 レジの使い方ガイド</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: t.drawerText, margin: 0, textAlign: 'left', borderBottom: `2px solid ${t.productPrice}`, paddingBottom: '4px' }}>📖 使い方ガイド</h3>
 
                 <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
                   <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>1. 商品・回数券の選択</div>
-                  画面左側のリストから、注文された商品や利用する回数券をタップします。カート内の数量変更（＋/－）や1部削除も画面上で簡単に行えます。
+                  画面左側のリストから、注文された商品や利用する回数券をタップします。カート内の数量変更（＋/－）や1部削除も画面上で簡単に行えます。<br>※修正した内容の反映はできません、アップデートをお待ちください</br>
                 </div>
 
                 <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
@@ -2837,12 +2837,12 @@ export default function PosAppPage() {
 
                 <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
                   <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>3. お預かり金額とお釣り</div>
-                  「ぴったり」や「+1000」などのクイックボタン、または金額欄をタップして表示されるテンキーから預かり現金を自動計算できます。
+                  「ぴったり」や「+1000」などのクイックボタン、または金額欄をタップして表示されるテンキーから預かり現金を計算可能
                 </div>
 
                 <div style={{ backgroundColor: t.bg, border: `1px solid ${t.border}`, borderRadius: '8px', padding: '12px' }}>
                   <div style={{ fontWeight: 'bold', color: t.drawerText, fontSize: '14px', marginBottom: '4px' }}>4. 会計完了とスプレッドシート送信</div>
-                  「1. 会計を完了する」でお渡し確認を行い、「2. シートへ送信」を押すことで外部スプレッドシートへ記録が行われます。
+                  「1. 会計を完了する」でお渡し確認を行い、「2. シートへ送信」を押すことで外部スプレッドシートへ記録が行われます
                 </div>
               </div>
             )}

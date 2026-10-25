@@ -48,7 +48,7 @@ export default function BlogPostPage() {
       <main style={{ maxWidth: '780px', margin: '0 auto', padding: '40px 20px' }}>
         <div style={{ marginBottom: '24px', textAlign: 'left' }}>
           <Link to="/blog" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px' }}>
-            ← コラム・使い方ガイド一覧へ戻る
+            ← 使い方ガイド一覧へ戻る
           </Link>
         </div>
 
@@ -89,7 +89,7 @@ export default function BlogPostPage() {
             今すぐ使える無料Web POSレジ「POSheep」
           </h3>
           <p style={{ fontSize: '14px', color: '#334155', marginBottom: '20px', textAlign: 'center' }}>
-            インストール・登録不要で、ブラウザから即起動できます。売上データはスプレッドシートへ自動連携！
+            インストール・登録不要でブラウザから即起動<br />売上データはスプレッドシートへ簡単連携可能！
           </p>
           <div style={{ textAlign: 'center' }}>
             <Link 

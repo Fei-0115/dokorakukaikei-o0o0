@@ -171,7 +171,7 @@ export default function LandingPage() {
 
       <main style={{ maxWidth: '960px', margin: '0 auto', padding: '36px 20px 80px 20px', textAlign: 'left' }}>
         
-        {/* もこもこクラウド ヒーローセクション */}
+        {/* もこもこクラウド*/}
         <section style={{
           position: 'relative',
           textAlign: 'center',
@@ -193,15 +193,15 @@ export default function LandingPage() {
 
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', padding: '6px 16px', borderRadius: '20px', border: '1px solid #bfdbfe', marginBottom: '16px' }}>
             <OctagonSheepLogo color="#2563eb" size={20} />
-            <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#1d4ed8' }}>無料Web POSレジ「ポシープ」</span>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#1d4ed8' }}>無料Web POSレジ「POSheep」</span>
           </div>
 
           <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#0f172a', marginBottom: '16px', lineHeight: '1.4' }}>
-            個人イベント・小規模店舗のための<br />完全無料 Web POSレジシステム
+            誰でも使える<br />完全無料 Web POSレジシステム
           </h1>
           
           <p style={{ fontSize: '16px', color: '#334155', maxWidth: '640px', margin: '0 auto 32px auto', fontWeight: '500' }}>
-            専用端末の購入は不要。スマホやパソコンのブラウザから今すぐ起動！売上データはGoogleスプレッドシートへリアルタイム全自動記録されます。
+            スマホやパソコンのブラウザから今すぐ起動！<br />連携すると売上データをGoogleスプレッドシートへ自動で記録可能
           </p>
 
           <Link 
@@ -231,17 +231,17 @@ export default function LandingPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '3px solid #2563eb', paddingBottom: '10px', marginBottom: '28px' }}>
             <OctagonSheepLogo color="#2563eb" size={26} />
             <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>
-              POSheep（ポシープ）の特長
+              POSheepの特長
             </h2>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', textAlign: 'left' }}>
               <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b', marginTop: 0, marginBottom: '10px', textAlign: 'left' }}>
-                1. アプリインストール不要でブラウザから即起動
+                1. アプリインストール不要でブラウザから即起動可能
               </h3>
               <p style={{ color: '#334155', margin: 0, fontSize: '15px', textAlign: 'left' }}>
-                高額なPOSレジ端末を購入したり、アプリストアからダウンロードする必要はありません。スマートフォン・タブレット・PCのブラウザからアクセスするだけで、その場でレジとして起動します。
+                簡単おてがるアプリストアからダウンロードする必要なし<br />スマートフォン・タブレット・PCのブラウザからアクセスするだけでその場でレジとして活躍
               </p>
             </div>
 
@@ -250,13 +250,13 @@ export default function LandingPage() {
                 2. Googleスプレッドシートへの全自動リアルタイム連携
               </h3>
               <p style={{ color: '#334155', margin: 0, fontSize: '15px', textAlign: 'left' }}>
-                Google Apps Script（GAS）を活用し、会計ボタンを押した瞬間に設定したGoogleスプレッドシートへ売上データ（日時・商品名・個数・金額など）が全自動で即座に記録されます。
+                Google Apps Script（GAS）を連携させると会計ボタンを押した瞬間に設定した個人のGoogleスプレッドシートへ売上データ（日時・商品名・個数・金額など）が全自動で即座に記録されます<br />スプレッドシートは個人で設定をお願いします
               </p>
             </div>
           </div>
         </section>
 
-        {/* 使い方ガイド一覧セクション */}
+        {/* 使い方ガイド一覧 */}
         <section id="guides" style={{ textAlign: 'left' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '3px solid #2563eb', paddingBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -314,7 +314,7 @@ export default function LandingPage() {
           animation: 'walkRightToLeft 14s linear infinite'
         }}>
           <div style={{ animation: 'sheepBob 0.6s ease-in-out infinite' }}>
-            <WalkingSideSheep color="#16a34a" size={44} />
+            <WalkingSideSheep color="#6BD9FF" size={44} />
           </div>
         </div>
       </div>
