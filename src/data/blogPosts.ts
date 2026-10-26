@@ -15,10 +15,10 @@ export type BlogPost = {
 export const BLOG_POSTS: BlogPost[] = [
   {
     id: 'pos-setup-guide',
-    title: '【完全ガイド】POSheepの使い方：初期設定から会計入力・スプレッドシート連携まで',
+    title: '【ご利用ガイド】POSheepの使い方：初期設定から会計入力・スプレッドシート連携まで',
     date: '2026-10-19',
     category: '使い方ガイド',
-    summary: '初めてPOSheepを使う方向けに、商品の追加方法、日常の会計操作、売上データの自動記録設定までを実際の操作画面付きで分かりやすく解説します。',
+    summary: '商品の追加方法、日常の会計操作、売上データの自動記録設定までを解説します。',
     content: [
       {
         heading: 'ステップ1：メイン画面と基本会計操作',
@@ -42,14 +42,14 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     id: 'spreadsheet-gas-tutorial',
-    title: 'Googleスプレッドシート連携手順：GAS（Apps Script）の5分簡単設定',
+    title: 'Googleスプレッドシート連携手順：GAS（Apps Script）の簡単設定',
     date: '2026-10-18',
     category: '連携設定',
-    summary: 'POSheepの売上データを自動集計するためのGoogleスプレッドシートおよびApps Scriptのデプロイ手順を解説します。',
+    summary: 'POSheepの売上データを自動集計するためのGoogleスプレッドシートおよびApps Scriptの連携方法について',
     content: [
       {
         heading: '1. アプリ設定からスプレッドシート連携を有効化する',
-        text: 'POSheepメニューの「アプリ設定」を開き、スプレッドシート連携を「ON (記録する)」に切り替えます。発行されたウェブアプリURLをフォームに入力するだけで自動連携が完了します。',
+        text: 'POSheepメニューの「アプリ設定」を開き、スプレッドシート連携を「ON (記録する)」に切り替えます。指定されたコードをコピーし、発行されたウェブアプリURLを該当フォームに入力すると自動連携が完了します。※こちらの機能の説明についてはアップデートをお待ちください。',
         image: '/images/pos-settings.png',
         imageCaption: '▲ アプリ設定画面からURLを入力して連携完了'
       }
@@ -59,8 +59,8 @@ export const BLOG_POSTS: BlogPost[] = [
     id: 'history-edit-guide',
     title: '会計履歴の確認と修正方法：打刻ミスやキャンセル時の対応手順',
     date: '2026-10-17',
-    category: '運用ノウハウ',
-    summary: '誤って入力した会計の二重線修正や、後からのまとめてデータ送信機能の使い方を詳しく解説します。',
+    category: 'ミスが起きた時は',
+    summary: '誤って入力した会計の二重線修正や、後からのまとめてデータ送信機能の使い方について',
     content: [
       {
         heading: 'メイン操作画面と履歴データの安全管理',
@@ -75,7 +75,7 @@ export const BLOG_POSTS: BlogPost[] = [
     title: '店舗カラーに合わせたスマートテーマ・デザインの切り替え手順',
     date: '2026-10-16',
     category: 'カスタマイズ',
-    summary: 'イベントの雰囲気や自店のブランドカラーに合わせてレジ画面の色をワンタップで変更する方法を案内します。',
+    summary: 'イベントの雰囲気や自店のブランドカラーに合わせてレジ画面の色をワンタップで変更する方法について',
     content: [
       {
         heading: '直感的な画面UIとカラーカスタム',
@@ -90,7 +90,7 @@ export const BLOG_POSTS: BlogPost[] = [
     title: '会員番号入力・内税外税計算・チケット割引の設定と活用方法',
     date: '2026-10-15',
     category: '機能設定',
-    summary: 'POSheepで提供している各種便利機能（会員番号テンキー、外税計算、回数券割引）のON/OFF切り替えガイドです。',
+    summary: 'POSheepで提供している各種便利機能（会員番号テンキー、外税計算、回数券割引）のON/OFF切り替えガイド',
     content: [
       {
         heading: '店舗運用に合わせた設定変更',
