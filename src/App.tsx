@@ -14,10 +14,11 @@ export default function App() {
       <Route path="/app" element={<PosAppPage />} />
       <Route path="/blog" element={<BlogListPage />} />
       <Route path="/blog/:id" element={<BlogPostPage />} />
-      {/* 新規追加した必須ページ */}
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
+      {/* 存在しないURLにアクセスした場合にトップへ戻す設定 */}
+      <Route path="*" element={<LandingPage />} />
     </Routes>
   );
 }

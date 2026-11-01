@@ -17,7 +17,7 @@ const OctagonSheepLogo = ({ color = '#1e293b', size = 32 }: { color?: string; si
     <path d="M66,42 C80,32 90,46 82,58 C76,66 66,60 70,50 C72,44 78,46 78,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
     <circle cx="43" cy="51" r="2.5" fill={color} />
     <circle cx="57" cy="51" r="2.5" fill={color} />
-    <path d="M50,56 L50,60 M46,63 C48,65 52,65 54,63" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
+    <path d="M50,56 L50,60 M46,63 C48,65 52,65 54,63" stroke={color} strokeWidth="3" strokeLinecap="round" />
   </svg>
 );
 

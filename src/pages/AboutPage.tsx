@@ -17,7 +17,7 @@ const OctagonSheepLogo = ({ color = '#1e293b', size = 32 }: { color?: string; si
     <path d="M66,42 C80,32 90,46 82,58 C76,66 66,60 70,50 C72,44 78,46 78,50" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
     <circle cx="43" cy="51" r="2.5" fill={color} />
     <circle cx="57" cy="51" r="2.5" fill={color} />
-    <path d="M50,56 L50,60 M46,63 C48,65 52,65 54,63" stroke={color} strokeWidth="3.5" fill="none" strokeLinecap="round" />
+    <path d="M50,56 L50,60 M46,63 C48,65 52,65 54,63" stroke={color} strokeWidth="3" strokeLinecap="round" />
   </svg>
 );
 
@@ -55,8 +55,8 @@ export default function AboutPage() {
             POSheep（ポシープ）の運営方針
           </h2>
           <p style={{ margin: 0, color: '#334155' }}>
-            POSheepは、個人作家様、フリーマーケット出店者様など店舗を持たない方々に向けて開発された完全無料試行錯誤のWebレジツールです。<br />
-            「数字が弱くても売上データを簡単に整理したい」という想いから生まれ、コツコツアップデートを行っています。
+            POSheepは、個人作家様、フリーマーケット出店者様、キッチンカーや小規模店舗を運営される方々に向けて開発された、完全無料のWebレジツールです。<br />
+            「高額なレジ機器を買うほどではないけれど、計算間違いを防ぎ、売上データを簡単に整理したい」という現場の想いから生まれました。
           </p>
         </section>
 
@@ -73,18 +73,12 @@ export default function AboutPage() {
 
             <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', padding: '14px 18px' }}>
               <div style={{ width: '160px', fontWeight: 'bold', color: '#0f172a', flexShrink: 0 }}>運営者 / 開発元</div>
-              <div style={{ color: '#334155' }}>
-                {/* ⬇️ ここをご自身のペンネームやお名前、屋号に書き換えてください */}
-                POSheep 開発プロジェクト
-              </div>
+              <div style={{ color: '#334155' }}>POSheep 開発プロジェクト</div>
             </div>
 
             <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', padding: '14px 18px', backgroundColor: '#f8fafc' }}>
               <div style={{ width: '160px', fontWeight: 'bold', color: '#0f172a', flexShrink: 0 }}>サイトURL</div>
-              <div style={{ color: '#334155' }}>
-                {/* ⬇️ ご自身のデプロイ先URL（例: https://posheep.vercel.app 等）に書き換えてください */}
-                https://posheep.vercel.app
-              </div>
+              <div style={{ color: '#334155' }}>https://posheep.vercel.app</div>
             </div>
 
             <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', padding: '14px 18px' }}>
