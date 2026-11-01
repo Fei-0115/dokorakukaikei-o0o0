@@ -71,7 +71,6 @@ const CARD_COLORS = [
   { bg: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)', badge: '#e11d48', text: '#be123c' },
 ];
 
-// お知らせのデータ一覧
 type NewsEntry = {
   id: string;
   date: string;
@@ -88,7 +87,7 @@ const NEWS_ENTRIES: NewsEntry[] = [
     date: '2026.10.19',
     isPinned: true,
     category: '機能追加',
-    categoryColor: '#fb7185', // やわらかなピンク/赤系
+    categoryColor: '#fb7185',
     title: 'Googleスプレッドシートへのリアルタイム全自動連携機能を公開しました。',
     link: '/blog/spreadsheet-gas-tutorial',
   },
@@ -96,7 +95,7 @@ const NEWS_ENTRIES: NewsEntry[] = [
     id: 'n-2',
     date: '2026.10.16',
     category: 'お知らせ',
-    categoryColor: '#78716c', // シックなグレー系
+    categoryColor: '#78716c',
     title: 'POSheepの公式サイトおよび使い方ガイドページをオープンしました。',
     link: '/blog',
   },
@@ -104,7 +103,7 @@ const NEWS_ENTRIES: NewsEntry[] = [
     id: 'n-3',
     date: '2026.10.14',
     category: 'アップデート',
-    categoryColor: '#3b82f6', // ブルー系
+    categoryColor: '#3b82f6',
     title: 'レジ画面のカラーテーマを自由にカスタマイズできる機能を追加しました。',
     link: '/blog/theme-custom-guide',
   },
@@ -347,7 +346,7 @@ export default function LandingPage() {
       {/* もこもこライン */}
       <div className="moko-moko-border" />
 
-      {/* ファーストビュー（ミニマル・タイポグラフィヒーロー） */}
+      {/* ファーストビュー */}
       <section style={{
         position: 'relative',
         minHeight: '74vh',
@@ -647,19 +646,16 @@ export default function LandingPage() {
 
         </section>
 
-        {/* ======================================================== */}
-        {/* 画像風デザインの「お知らせ」セクション（一番下に配置） */}
-        {/* ======================================================== */}
+        {/* お知らせセクション */}
         <section id="news" style={{ marginBottom: '60px', textAlign: 'left' }}>
           
-          {/* 上部ヘッダー（角丸ベージュスクエア + NEWS ラベル） */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span style={{
               display: 'inline-block',
               width: '18px',
               height: '18px',
               borderRadius: '5px',
-              backgroundColor: '#d6cec7' // 画像に合わせたベージュスクエア
+              backgroundColor: '#d6cec7'
             }} />
             <span style={{
               fontSize: '13px',
@@ -671,7 +667,6 @@ export default function LandingPage() {
             </span>
           </div>
 
-          {/* 特大の見出し「お知らせ」 */}
           <h2 style={{
             fontSize: 'clamp(36px, 5vw, 48px)',
             fontWeight: '900',
@@ -683,7 +678,6 @@ export default function LandingPage() {
             お知らせ
           </h2>
 
-          {/* お知らせリスト一覧 */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {NEWS_ENTRIES.map((item) => (
               <Link
@@ -691,10 +685,7 @@ export default function LandingPage() {
                 to={item.link || '#'}
                 className="news-row-item"
               >
-                {/* 日付・ピン・バッジを含むメタ情報エリア */}
                 <div className="news-row-meta" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-                  
-                  {/* 日付 */}
                   <span style={{
                     fontFamily: 'monospace, sans-serif',
                     fontSize: '14px',
@@ -706,7 +697,6 @@ export default function LandingPage() {
                     {item.date}
                   </span>
 
-                  {/* ピン留めアイコン（固定記事のみ表示） */}
                   {item.isPinned ? (
                     <span style={{ fontSize: '13px', color: '#0f172a', display: 'flex', alignItems: 'center' }} title="固定記事">
                       📌
@@ -715,7 +705,6 @@ export default function LandingPage() {
                     <span style={{ width: '13px', display: 'inline-block' }} />
                   )}
 
-                  {/* カテゴリバッジ（角丸長方形） */}
                   <span style={{
                     backgroundColor: item.categoryColor,
                     color: '#ffffff',
@@ -732,7 +721,6 @@ export default function LandingPage() {
                   </span>
                 </div>
 
-                {/* 記事タイトル */}
                 <span className="news-title-text" style={{
                   fontSize: '14px',
                   fontWeight: '500',
@@ -747,7 +735,6 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* 左下の「お知らせ一覧へ →」リンクボタン */}
           <div style={{ marginTop: '36px' }}>
             <Link
               to="/blog"
@@ -807,12 +794,29 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '36px 20px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-          <OctagonSheepLogo color="#64748b" size={20} />
-          <span style={{ fontWeight: 'bold', color: '#334155', fontSize: '14px', letterSpacing: '0.05em' }}>POSheep（ポシープ）</span>
+      {/* フッター（必須固定ページリンク設置） */}
+      <footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '40px 20px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <OctagonSheepLogo color="#64748b" size={22} />
+          <span style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '15px', letterSpacing: '0.05em' }}>POSheep（ポシープ）</span>
         </div>
-        <p style={{ color: '#64748b', fontSize: '13px', margin: 0, letterSpacing: '0.05em' }}>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <Link to="/about" style={{ color: '#475569', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>
+            運営者情報
+          </Link>
+          <Link to="/privacy" style={{ color: '#475569', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>
+            プライバシーポリシー
+          </Link>
+          <Link to="/contact" style={{ color: '#475569', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>
+            お問い合わせ
+          </Link>
+          <Link to="/blog" style={{ color: '#475569', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' }}>
+            使い方ガイド一覧
+          </Link>
+        </div>
+
+        <p style={{ color: '#94a3b8', fontSize: '12px', margin: 0, letterSpacing: '0.05em' }}>
           © POSheep - Web POS Application All Rights Reserved.
         </p>
       </footer>
